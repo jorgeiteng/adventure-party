@@ -453,6 +453,88 @@ class SoundEngine {
     });
   }
 
+  /**
+   * Boss spawn — deep resonant rumble
+   */
+  playBossSpawn() {
+    const ctx = this.ensureContext();
+    if (!ctx || this.muted) return;
+    const now = ctx.currentTime;
+
+    // Low rumble crescendo
+    const rumble = ctx.createOscillator();
+    const rumbleGain = ctx.createGain();
+    rumble.type = "sawtooth";
+    rumble.frequency.setValueAtTime(55, now);
+    rumble.frequency.linearRampToValueAtTime(110, now + 0.6);
+
+    rumbleGain.gain.setValueAtTime(0, now);
+    rumbleGain.gain.linearRampToValueAtTime(0.4, now + 0.3);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+
+    rumble.connect(rumbleGain);
+    rumbleGain.connect(this.sfxGain);
+    rumble.start(now);
+    rumble.stop(now + 1.05);
+
+    // Impact chord (ominous minor)
+    const chord = [130.81, 155.56, 196.0, 261.63];
+    chord.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      const t = now + 0.4 + idx * 0.04;
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, t);
+
+      oscGain.gain.setValueAtTime(0, t);
+      oscGain.gain.linearRampToValueAtTime(0.3, t + 0.05);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.85);
+    });
+  }
+
+  /**
+   * Victory fanfare — triumphant ascending arpeggio
+   */
+  playVictory() {
+    const ctx = this.ensureContext();
+    if (!ctx || this.muted) return;
+    const now = ctx.currentTime;
+
+    const notes = [
+      { f: 261.63, t: 0.0, dur: 0.15 },
+      { f: 329.63, t: 0.1, dur: 0.15 },
+      { f: 392.0,  t: 0.2, dur: 0.15 },
+      { f: 523.25, t: 0.3, dur: 0.15 },
+      { f: 659.25, t: 0.4, dur: 0.2 },
+      { f: 783.99, t: 0.52, dur: 0.2 },
+      { f: 1046.5, t: 0.64, dur: 1.0 },
+    ];
+
+    notes.forEach(({ f, t: delay, dur }) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      const t = now + delay;
+
+      osc.type = delay >= 0.52 ? "sine" : "triangle";
+      osc.frequency.setValueAtTime(f, t);
+
+      oscGain.gain.setValueAtTime(0, t);
+      oscGain.gain.linearRampToValueAtTime(0.3, t + 0.02);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    });
+  }
+
   // --- BACKGROUND MUSIC ENGINE ---
 
   startBgm() {

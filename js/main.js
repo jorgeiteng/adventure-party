@@ -1,7 +1,9 @@
-import { createInput } from "./input.js";
-import { createCamera, updateCamera } from "./camera.js";
-import { createGame, updateGame } from "./game.js?v=4";
-import { drawWorld, drawEntities } from "./render.js";
+import { createInput } from "./input.js?v=5";
+import { createCamera, updateCamera } from "./camera.js?v=5";
+import { createGame, updateGame } from "./game.js?v=5";
+import { drawWorld, drawEntities } from "./render.js?v=5";
+
+const VERSION = "0.5";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -9,6 +11,8 @@ const input = createInput(canvas);
 const camera = createCamera();
 const game = createGame();
 window.__hp = { game, input, camera };
+
+document.getElementById("version").textContent = `v${VERSION}`;
 
 function resize() {
   const ratio = window.devicePixelRatio || 1;
@@ -36,7 +40,7 @@ function frame(now) {
   const ratio = window.devicePixelRatio || 1;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawWorld(ctx, game.world, camera, now);
-  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now);
+  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now, game.shrineBoss);
   requestAnimationFrame(frame);
 }
 

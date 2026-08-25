@@ -182,3 +182,14 @@ kbd {
   border-color: rgba(244, 234, 208, 0.25);
 }
 
+#version {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 11px;
+  color: rgba(244, 234, 208, 0.4);
+  pointer-events: none;
+  user-select: none;
+  font-family: monospace;
+}
+

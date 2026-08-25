@@ -1,6 +1,6 @@
-import { TILE, moveWithCollision } from "./world.js?v=3";
-import { nearest, tryMelee, tickKnockback } from "./combat.js";
-import { sound } from "./audio.js";
+import { TILE, moveWithCollision } from "./world.js?v=5";
+import { nearest, tryMelee, tickKnockback } from "./combat.js?v=5";
+import { sound } from "./audio.js?v=5";
 
 export const PARTY = [
   {

@@ -1,5 +1,5 @@
-import { sound } from "./audio.js";
-import { updateSoundButton } from "./render.js";
+import { sound } from "./audio.js?v=5";
+import { updateSoundButton } from "./render.js?v=5";
 
 export function createInput(canvas) {
   const keys = new Set();

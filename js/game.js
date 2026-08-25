@@ -1,9 +1,11 @@
-import { createWorld, shrineCenter } from "./world.js?v=3";
-import { spawnParty, updateParty } from "./hero.js";
-import { spawnMonsters, updateMonsters } from "./monster.js";
-import { spawnChests, updateChests } from "./chest.js?v=1";
-import { updateHud, setBanner, setWipe } from "./render.js";
-import { sound } from "./audio.js";
+import { createWorld, shrineCenter, randomWalkable } from "./world.js?v=5";
+import { spawnParty, updateParty } from "./hero.js?v=5";
+import { spawnMonsters, updateMonsters, createMonster, randomKind, lynelSpec } from "./monster.js?v=5";
+import { spawnChests, updateChests } from "./chest.js?v=5";
+import { updateHud, setBanner, setWipe } from "./render.js?v=5";
+import { sound } from "./audio.js?v=5";
+
+const WAVE_COUNT = 6;
 
 export function createGame() {
   return resetGame();
@@ -26,7 +28,40 @@ export function resetGame() {
     nearShrine: false,
     bannerText: "",
     bannerUntil: 0,
+    shrineState: "idle",
+    shrineWave: [],
+    shrineBoss: null,
+    shrineTriggered: false,
   };
+}
+
+function spawnWaveMonsters(game) {
+  const center = shrineCenter(game.world);
+  const wave = [];
+  for (let i = 0; i < WAVE_COUNT; i++) {
+    const spec = randomKind(game.world);
+    const pos = randomWalkable(game.world, center, 80);
+    const m = createMonster(spec, pos.x, pos.y);
+    m.noRespawn = true;
+    wave.push(m);
+    game.monsters.push(m);
+  }
+  game.shrineWave = wave;
+}
+
+function spawnBoss(game) {
+  const center = shrineCenter(game.world);
+  const pos = randomWalkable(game.world, center, 40);
+  const boss = createMonster(lynelSpec(), pos.x, pos.y);
+  boss.noRespawn = true;
+  game.shrineBoss = boss;
+  game.monsters.push(boss);
+}
+
+function healParty(heroes) {
+  for (const hero of heroes) {
+    hero.hp = hero.maxHp;
+  }
 }
 
 export function updateGame(game, input, now, dt) {
@@ -49,18 +84,52 @@ export function updateGame(game, input, now, dt) {
 
   updateHud(game.heroes, game.chests);
 
+  // --- Shrine puzzle state machine ---
   const shrine = shrineCenter(game.world);
   const leader = game.heroes[0];
+  const distToShrine = Math.hypot(leader.x - shrine.x, leader.y - shrine.y);
+  const nearShrineRadius = 48;
   const wasNearShrine = game.nearShrine;
-  game.nearShrine = Math.hypot(leader.x - shrine.x, leader.y - shrine.y) < 48;
+  game.nearShrine = distToShrine < nearShrineRadius;
 
+  if (game.shrineState === "idle") {
+    if (game.nearShrine && !game.shrineTriggered) {
+      game.shrineTriggered = true;
+      game.shrineState = "defense";
+      sound.playShrine();
+      spawnWaveMonsters(game);
+      game.bannerText = "Defend the shrine!";
+      game.bannerUntil = now + 3000;
+    }
+  } else if (game.shrineState === "defense") {
+    const allDead = game.shrineWave.every((m) => m.hp <= 0);
+    if (allDead) {
+      game.shrineWave = [];
+      game.shrineState = "boss";
+      sound.playBossSpawn();
+      spawnBoss(game);
+      game.bannerText = "A Lynel emerges!";
+      game.bannerUntil = now + 2500;
+    }
+  } else if (game.shrineState === "boss") {
+    if (game.shrineBoss && game.shrineBoss.hp <= 0) {
+      game.shrineBoss = null;
+      game.shrineState = "completed";
+      sound.playVictory();
+      healParty(game.heroes);
+      game.bannerText = "The shrine is sealed. The party is blessed!";
+      game.bannerUntil = now + 6000;
+    }
+  }
+
+  // Banner display
   if (game.bannerUntil && now < game.bannerUntil) {
     setBanner(game.bannerText);
-  } else if (game.nearShrine) {
+  } else if (game.shrineState === "idle" && game.nearShrine) {
     if (!wasNearShrine) {
       sound.playShrine();
     }
-    setBanner("The sealed shrine waits. The final trial comes in Phase 2.");
+    setBanner("The sealed shrine awaits...");
   } else {
     setBanner("");
   }
@@ -72,5 +141,3 @@ export function updateGame(game, input, now, dt) {
     setBanner("");
   }
 }
-
-

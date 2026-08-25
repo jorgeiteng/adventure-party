@@ -1,4 +1,4 @@
-import { sound } from "./audio.js";
+import { sound } from "./audio.js?v=5";
 
 export function living(entities) {
   return entities.filter((entity) => entity.hp > 0);

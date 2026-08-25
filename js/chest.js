@@ -1,5 +1,5 @@
-import { TILE, circleHitsSolid } from "./world.js?v=3";
-import { sound } from "./audio.js";
+import { TILE, circleHitsSolid } from "./world.js?v=5";
+import { sound } from "./audio.js?v=5";
 
 const CHEST_DEFS = [
   {

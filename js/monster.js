@@ -1,5 +1,5 @@
-import { TILE, moveWithCollision, randomWalkable } from "./world.js?v=3";
-import { nearest, tryMelee, tickKnockback } from "./combat.js";
+import { TILE, moveWithCollision, randomWalkable } from "./world.js?v=5";
+import { nearest, tryMelee, tickKnockback } from "./combat.js?v=5";
 
 const KINDS = [
   {
@@ -47,7 +47,22 @@ const KINDS = [
   },
 ];
 
-function createMonster(spec, x, y) {
+const LYNEL_SPEC = {
+  id: "lynel",
+  name: "Lynel",
+  color: "#8b1a2a",
+  accent: "#5a0f1a",
+  r: 16,
+  speed: 65,
+  maxHp: 120,
+  damage: 18,
+  attackRange: 22,
+  attackCooldown: 800,
+  aggro: 300,
+  knockback: 70,
+};
+
+export function createMonster(spec, x, y) {
   return {
     ...spec,
     kind: "monster",
@@ -84,6 +99,7 @@ export function updateMonsters(monsters, heroes, world, now, dt) {
   const liveHeroes = heroes.filter((h) => h.hp > 0);
   for (const monster of monsters) {
     if (monster.hp <= 0) {
+      if (monster.noRespawn) continue;
       if (!monster.respawnAt) monster.respawnAt = now + 7000 + world.rand() * 4000;
       if (now >= monster.respawnAt) {
         const leader = heroes[0];
@@ -124,4 +140,12 @@ export function updateMonsters(monsters, heroes, world, now, dt) {
       );
     }
   }
+}
+
+export function randomKind(world) {
+  return KINDS[Math.floor(world.rand() * KINDS.length)];
+}
+
+export function lynelSpec() {
+  return LYNEL_SPEC;
 }

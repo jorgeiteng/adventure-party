@@ -1,5 +1,5 @@
-import { TILE, MAP_W, MAP_H, Tiles, tileAt } from "./world.js?v=3";
-import { worldToScreen } from "./camera.js";
+import { TILE, MAP_W, MAP_H, Tiles, tileAt } from "./world.js?v=5";
+import { worldToScreen } from "./camera.js?v=5";
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -788,6 +788,159 @@ function drawSkyGnat(ctx, entity, time, flash) {
   }
 }
 
+function drawLynel(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const bodyColor = flash ? "#ffffff" : entity.color;
+
+  // Horse lower body / haunches
+  ctx.fillStyle = flash ? "#ffffff" : "#6d1520";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.15, r * 0.2, r * 0.8, r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Four horse legs
+  const walkPhase = Math.sin(time * 0.006);
+  ctx.fillStyle = flash ? "#ffffff" : "#5a0f1a";
+  const legPositions = [
+    { x: -r * 0.4, y: r * 0.65 },
+    { x: -r * 0.1, y: r * 0.7 },
+    { x: r * 0.2, y: r * 0.7 },
+    { x: r * 0.45, y: r * 0.65 },
+  ];
+  for (let i = 0; i < 4; i++) {
+    const wag = walkPhase * (i % 2 === 0 ? 3 : -3);
+    ctx.fillRect(legPositions[i].x - 2, legPositions[i].y - 4 + wag, 4, 12);
+  }
+
+  // Horse tail
+  const tailWag = Math.sin(time * 0.01) * 5;
+  ctx.strokeStyle = flash ? "#ffffff" : "#2a0808";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.7, r * 0.1);
+  ctx.quadraticCurveTo(-r * 1.1, tailWag, -r * 1.3, tailWag * 0.8);
+  ctx.stroke();
+
+  // Humanoid torso
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.25, r * 0.65, r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // White mane flowing from head down
+  if (!flash) {
+    ctx.fillStyle = "#e8e0d0";
+    const maneWag = Math.sin(time * 0.008) * 2;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.15, -r * 0.7);
+    ctx.quadraticCurveTo(-r * 0.4, -r * 0.3 + maneWag, -r * 0.6, r * 0.1 + maneWag);
+    ctx.lineTo(-r * 0.3, r * 0.1 + maneWag);
+    ctx.quadraticCurveTo(-r * 0.15, -r * 0.2, -r * 0.05, -r * 0.65);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Head (horse-like with humanoid features)
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.15, -r * 0.65, r * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Muzzle / snout
+  ctx.fillStyle = flash ? "#ffffff" : "#a02030";
+  ctx.beginPath();
+  ctx.ellipse(r * 0.45, -r * 0.55, r * 0.2, r * 0.15, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Two golden horns
+  ctx.fillStyle = flash ? "#ffffff" : "#d4a520";
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.05, -r * 0.85);
+  ctx.lineTo(-r * 0.2, -r * 1.35);
+  ctx.lineTo(r * 0.1, -r * 0.9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.2, -r * 0.85);
+  ctx.lineTo(r * 0.35, -r * 1.3);
+  ctx.lineTo(r * 0.4, -r * 0.85);
+  ctx.closePath();
+  ctx.fill();
+
+  // Glowing red eyes
+  ctx.fillStyle = flash ? "#ffffff" : "#ff2222";
+  ctx.beginPath();
+  ctx.arc(r * 0.05, -r * 0.72, 2, 0, Math.PI * 2);
+  ctx.arc(r * 0.28, -r * 0.72, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Left arm with round shield (-Y)
+  ctx.save();
+  ctx.translate(-r * 0.1, -r * 0.5);
+  ctx.fillStyle = flash ? "#ffffff" : "#8b1a2a";
+  ctx.beginPath();
+  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = flash ? "#ffffff" : "#d4a520";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = flash ? "#ffffff" : "#d4a520";
+  ctx.beginPath();
+  ctx.arc(0, 0, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Right arm with spear (+Y)
+  ctx.save();
+  const spearHandX = r * 0.3;
+  const spearHandY = r * 0.3;
+  ctx.translate(spearHandX, spearHandY);
+
+  let spearAngle = 0.3;
+  let spearLen = 22;
+  if (isAttacking) {
+    spearAngle = -0.9 + Math.sin(time * 0.03) * 0.7;
+    spearLen = 26;
+  }
+  ctx.rotate(spearAngle);
+
+  // Spear shaft
+  ctx.strokeStyle = flash ? "#ffffff" : "#78350f";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-6, 0);
+  ctx.lineTo(spearLen, 0);
+  ctx.stroke();
+
+  // Spearhead
+  ctx.fillStyle = flash ? "#ffffff" : "#d4a520";
+  ctx.beginPath();
+  ctx.moveTo(spearLen - 2, -4);
+  ctx.lineTo(spearLen + 6, 0);
+  ctx.lineTo(spearLen - 2, 4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+
+  // Hand node
+  ctx.fillStyle = flash ? "#ffffff" : "#a02030";
+  ctx.beginPath();
+  ctx.arc(spearHandX, spearHandY, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spear thrust trail on attack
+  if (isAttacking) {
+    ctx.strokeStyle = "rgba(255, 180, 60, 0.7)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, -r * 0.1, r + 15, -0.6, 0.6);
+    ctx.stroke();
+  }
+}
+
 function drawCreature(ctx, camera, entity, time) {
   if (entity.hp <= 0) return;
   const p = worldToScreen(camera, entity.x, entity.y);
@@ -813,6 +966,8 @@ function drawCreature(ctx, camera, entity, time) {
       drawFanglet(ctx, entity, time, flash);
     } else if (entity.id === "skyGnat") {
       drawSkyGnat(ctx, entity, time, flash);
+    } else if (entity.id === "lynel") {
+      drawLynel(ctx, entity, time, flash);
     } else {
       ctx.fillStyle = flash ? "#fff6d8" : entity.color;
       ctx.beginPath();
@@ -956,7 +1111,7 @@ function drawChest(ctx, camera, chest, time) {
   }
 }
 
-export function drawEntities(ctx, camera, heroes, monsters, chests, time) {
+export function drawEntities(ctx, camera, heroes, monsters, chests, time, boss) {
   const all = [...(chests || []), ...heroes, ...monsters].sort((a, b) => a.y - b.y);
   for (const entity of all) {
     if (entity.loot) {
@@ -965,6 +1120,7 @@ export function drawEntities(ctx, camera, heroes, monsters, chests, time) {
       drawCreature(ctx, camera, entity, time);
     }
   }
+  if (boss) drawBossHud(ctx, boss, camera);
 }
 
 export function updateHud(heroes, chests) {
@@ -989,6 +1145,36 @@ export function updateHud(heroes, chests) {
   }
 
   root.innerHTML = heroHtml + chestHtml;
+}
+
+export function drawBossHud(ctx, boss, camera) {
+  if (!boss || boss.hp <= 0) return;
+  const barW = 220;
+  const barH = 10;
+  const x = (camera.w - barW) / 2;
+  const y = 16;
+  const ratio = boss.hp / boss.maxHp;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  roundRect(ctx, x - 4, y - 18, barW + 8, 32, 4);
+  ctx.fill();
+
+  ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#ff4444";
+  ctx.fillText(boss.name, x + barW / 2, y - 16);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  roundRect(ctx, x, y, barW, barH, 3);
+  ctx.fill();
+
+  ctx.fillStyle = ratio > 0.3 ? "#e04040" : "#ff6666";
+  roundRect(ctx, x, y, barW * ratio, barH, 3);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 export function setBanner(text) {
