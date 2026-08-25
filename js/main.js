@@ -36,7 +36,7 @@ function frame(now) {
   const ratio = window.devicePixelRatio || 1;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawWorld(ctx, game.world, camera, now);
-  drawEntities(ctx, camera, game.heroes, game.monsters, now);
+  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now);
   requestAnimationFrame(frame);
 }
 

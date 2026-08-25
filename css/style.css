@@ -81,6 +81,18 @@ body {
   width: 100%;
 }
 
+.chest-hud {
+  font-size: 13px;
+  color: #fef08a;
+  letter-spacing: 0.03em;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(18, 28, 22, 0.7);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 6px;
+  width: fit-content;
+}
+
 #hint {
   margin: 14px 0 0;
   font-size: 12px;
