@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adventure Party</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="game-root">
+      <canvas id="game"></canvas>
+      <div id="hud">
+        <div id="party-hud"></div>
+        <p id="hint">WASD / arrows to move · Space or click to strike · R to restart if fallen</p>
+      </div>
+      <div id="banner" class="hidden"></div>
+      <div id="wipe" class="hidden">
+        <h1>The party has fallen</h1>
+        <p>Press <kbd>R</kbd> to rise again</p>
+      </div>
+    </div>
+    <script type="module" src="js/main.js?v=3"></script>
+  </body>
+</html>
