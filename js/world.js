@@ -187,6 +187,18 @@ export function randomWalkable(world, minDistFrom, minDist = 80) {
   };
 }
 
+export function randomWalkableNear(world, center, maxDist) {
+  for (let i = 0; i < 80; i++) {
+    const angle = world.rand() * Math.PI * 2;
+    const dist = world.rand() * maxDist;
+    const x = center.x + Math.cos(angle) * dist;
+    const y = center.y + Math.sin(angle) * dist;
+    if (circleHitsSolid(world, x, y, 10)) continue;
+    return { x, y };
+  }
+  return { x: center.x, y: center.y };
+}
+
 export function shrineCenter(world) {
   return {
     x: world.shrine.tx * TILE + TILE / 2,

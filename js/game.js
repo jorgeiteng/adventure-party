@@ -1,4 +1,4 @@
-import { createWorld, shrineCenter, randomWalkable } from "./world.js?v=5";
+import { createWorld, shrineCenter, randomWalkableNear } from "./world.js?v=5";
 import { spawnParty, updateParty } from "./hero.js?v=5";
 import { spawnMonsters, updateMonsters, createMonster, randomKind, lynelSpec } from "./monster.js?v=5";
 import { spawnChests, updateChests } from "./chest.js?v=5";
@@ -40,7 +40,7 @@ function spawnWaveMonsters(game) {
   const wave = [];
   for (let i = 0; i < WAVE_COUNT; i++) {
     const spec = randomKind(game.world);
-    const pos = randomWalkable(game.world, center, 80);
+    const pos = randomWalkableNear(game.world, center, 100);
     const m = createMonster(spec, pos.x, pos.y);
     m.noRespawn = true;
     wave.push(m);
@@ -51,7 +51,7 @@ function spawnWaveMonsters(game) {
 
 function spawnBoss(game) {
   const center = shrineCenter(game.world);
-  const pos = randomWalkable(game.world, center, 40);
+  const pos = randomWalkableNear(game.world, center, 40);
   const boss = createMonster(lynelSpec(), pos.x, pos.y);
   boss.noRespawn = true;
   game.shrineBoss = boss;
@@ -123,7 +123,12 @@ export function updateGame(game, input, now, dt) {
   }
 
   // Banner display
-  if (game.bannerUntil && now < game.bannerUntil) {
+  if (game.shrineState === "defense") {
+    const alive = game.shrineWave.filter((m) => m.hp > 0).length;
+    setBanner(`Defend the shrine! Enemies remaining: ${alive}`);
+  } else if (game.shrineState === "boss" && game.shrineBoss && game.shrineBoss.hp > 0) {
+    setBanner("A Lynel emerges! Defeat it!");
+  } else if (game.bannerUntil && now < game.bannerUntil) {
     setBanner(game.bannerText);
   } else if (game.shrineState === "idle" && game.nearShrine) {
     if (!wasNearShrine) {

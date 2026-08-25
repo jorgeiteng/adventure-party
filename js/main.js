@@ -3,7 +3,7 @@ import { createCamera, updateCamera } from "./camera.js?v=5";
 import { createGame, updateGame } from "./game.js?v=5";
 import { drawWorld, drawEntities } from "./render.js?v=5";
 
-const VERSION = "0.5";
+const VERSION = "0.6";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
