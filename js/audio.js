@@ -347,10 +347,45 @@ class SoundEngine {
       osc.start(t);
       osc.stop(t + 1.45);
     });
+  /**
+   * Treasure chest opened fanfare (sparkling discovery chime)
+   */
+  playChestOpen() {
+    const ctx = this.ensureContext();
+    if (!ctx || this.muted) return;
+    const now = ctx.currentTime;
+
+    // Rising arpeggio: G4 -> C5 -> E5 -> G5 -> B5 -> C6 (sparkling fanfare)
+    const notes = [
+      { f: 392.0, t: 0.0, dur: 0.12 },
+      { f: 523.25, t: 0.08, dur: 0.12 },
+      { f: 659.25, t: 0.16, dur: 0.14 },
+      { f: 783.99, t: 0.24, dur: 0.16 },
+      { f: 987.77, t: 0.32, dur: 0.18 },
+      { f: 1046.5, t: 0.42, dur: 0.65 },
+      { f: 1318.51, t: 0.42, dur: 0.65 }, // Harmonic shimmer on final note
+    ];
+
+    notes.forEach(({ f, t: delay, dur }) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      const t = now + delay;
+
+      osc.type = delay >= 0.42 ? "sine" : "triangle";
+      osc.frequency.setValueAtTime(f, t);
+
+      oscGain.gain.setValueAtTime(0, t);
+      oscGain.gain.linearRampToValueAtTime(0.32, t + 0.02);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.sfxGain);
+
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    });
   }
 
-  /**
-   * Party Wipe / Defeat fanfare
    */
   playWipe() {
     const ctx = this.ensureContext();

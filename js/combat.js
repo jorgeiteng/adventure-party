@@ -48,7 +48,11 @@ export function tryMelee(attacker, targets, now) {
 
 export function applyHit(target, attacker, now) {
   const prevHp = target.hp;
-  target.hp = Math.max(0, target.hp - attacker.damage);
+  const rawDamage = attacker.damage;
+  const effectiveDamage = target.damageReduction
+    ? Math.max(1, Math.round(rawDamage * (1 - target.damageReduction)))
+    : rawDamage;
+  target.hp = Math.max(0, target.hp - effectiveDamage);
   target.invulnUntil = now + (target.invulnMs || 280);
   target.flashUntil = now + 120;
   const dx = target.x - attacker.x;
