@@ -1,3 +1,5 @@
+import { sound } from "./audio.js";
+
 export function living(entities) {
   return entities.filter((entity) => entity.hp > 0);
 }
@@ -36,12 +38,16 @@ export function tryMelee(attacker, targets, now) {
   if (hit || attacker.kind === "hero") {
     attacker.nextAttack = now + attacker.attackCooldown;
     attacker.swingUntil = now + 180;
+    if (attacker.kind === "hero") {
+      sound.playSwing(attacker.role);
+    }
     return true;
   }
   return false;
 }
 
 export function applyHit(target, attacker, now) {
+  const prevHp = target.hp;
   target.hp = Math.max(0, target.hp - attacker.damage);
   target.invulnUntil = now + (target.invulnMs || 280);
   target.flashUntil = now + 120;
@@ -52,6 +58,20 @@ export function applyHit(target, attacker, now) {
     x: (dx / len) * (attacker.knockback || 90),
     y: (dy / len) * (attacker.knockback || 90),
   };
+
+  if (target.kind === "monster") {
+    if (target.hp <= 0 && prevHp > 0) {
+      sound.playMonsterDeath();
+    } else {
+      sound.playHit();
+    }
+  } else if (target.kind === "hero") {
+    if (target.hp <= 0 && prevHp > 0) {
+      sound.playHeroDeath();
+    } else {
+      sound.playHeroHurt();
+    }
+  }
 }
 
 export function tickKnockback(entity, world, dt, moveWithCollision) {

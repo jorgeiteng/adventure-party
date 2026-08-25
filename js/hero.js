@@ -1,5 +1,6 @@
 import { TILE, moveWithCollision } from "./world.js?v=3";
 import { nearest, tryMelee, tickKnockback } from "./combat.js";
+import { sound } from "./audio.js";
 
 export const PARTY = [
   {
@@ -146,11 +147,16 @@ export function updateParty(heroes, monsters, world, input, now, dt) {
 
     if (hero.healPulse && now >= hero.nextHeal) {
       hero.nextHeal = now + hero.healEvery;
+      let healedAny = false;
       for (const ally of heroes) {
         if (ally.hp <= 0) continue;
         if (Math.hypot(ally.x - hero.x, ally.y - hero.y) < 70) {
+          if (ally.hp < ally.maxHp) healedAny = true;
           ally.hp = Math.min(ally.maxHp, ally.hp + hero.healPulse);
         }
+      }
+      if (healedAny) {
+        sound.playHeal();
       }
     }
   }

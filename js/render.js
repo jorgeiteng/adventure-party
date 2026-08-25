@@ -204,3 +204,13 @@ export function setBanner(text) {
 export function setWipe(show) {
   document.getElementById("wipe").classList.toggle("hidden", !show);
 }
+
+export function updateSoundButton(muted) {
+  const btn = document.getElementById("sound-btn");
+  if (btn) {
+    btn.textContent = muted ? "🔇" : "🔊";
+    btn.classList.toggle("muted", muted);
+    btn.title = muted ? "Unmute Sound (M)" : "Mute Sound (M)";
+  }
+}
+
