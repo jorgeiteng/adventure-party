@@ -55,6 +55,7 @@ export function createWorld(seed = 20260825) {
   const tiles = new Uint8Array(MAP_W * MAP_H);
   const spawn = { tx: 14, ty: 48 };
   const shrine = { tx: 50, ty: 12 };
+  const zorasDomain = { tx: 8, ty: 10 };
 
   for (let y = 0; y < MAP_H; y++) {
     for (let x = 0; x < MAP_W; x++) {
@@ -93,6 +94,9 @@ export function createWorld(seed = 20260825) {
   carveDisk(spawn.tx, spawn.ty, 5, Tiles.GRASS);
   carvePath(spawn.tx, spawn.ty, shrine.tx, shrine.ty);
   carveDisk(shrine.tx, shrine.ty, 5, Tiles.GRASS);
+  carveDisk(zorasDomain.tx, zorasDomain.ty, 4, Tiles.WATER);
+  carveDisk(zorasDomain.tx, zorasDomain.ty, 2, Tiles.GRASS);
+  carvePath(spawn.tx, spawn.ty, zorasDomain.tx, zorasDomain.ty);
 
   for (let i = 0; i < 90; i++) {
     const cx = 3 + Math.floor(rand() * (MAP_W - 6));
@@ -127,6 +131,7 @@ export function createWorld(seed = 20260825) {
     tiles,
     spawn,
     shrine,
+    zorasDomain,
     width: MAP_W * TILE,
     height: MAP_H * TILE,
     rand,
@@ -203,5 +208,12 @@ export function shrineCenter(world) {
   return {
     x: world.shrine.tx * TILE + TILE / 2,
     y: world.shrine.ty * TILE + TILE / 2,
+  };
+}
+
+export function zorasDomainCenter(world) {
+  return {
+    x: world.zorasDomain.tx * TILE + TILE / 2,
+    y: world.zorasDomain.ty * TILE + TILE / 2,
   };
 }

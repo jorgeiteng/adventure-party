@@ -1123,7 +1123,7 @@ export function drawEntities(ctx, camera, heroes, monsters, chests, time, boss) 
   if (boss) drawBossHud(ctx, boss, camera);
 }
 
-export function updateHud(heroes, chests) {
+export function updateHud(heroes, chests, hasMedal) {
   const root = document.getElementById("party-hud");
   const heroHtml = heroes
     .map((hero) => {
@@ -1144,7 +1144,12 @@ export function updateHud(heroes, chests) {
     chestHtml = `<div class="chest-hud">🎁 Chests: ${opened} / ${chests.length}</div>`;
   }
 
-  root.innerHTML = heroHtml + chestHtml;
+  let medalHtml = "";
+  if (hasMedal) {
+    medalHtml = `<div class="medal-hud">🏅 Shrine Medal</div>`;
+  }
+
+  root.innerHTML = heroHtml + chestHtml + medalHtml;
 }
 
 export function drawBossHud(ctx, boss, camera) {

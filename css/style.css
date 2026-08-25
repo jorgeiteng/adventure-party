@@ -93,6 +93,19 @@ body {
   width: fit-content;
 }
 
+.medal-hud {
+  font-size: 13px;
+  color: #ffd700;
+  letter-spacing: 0.03em;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(40, 32, 10, 0.7);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  border-radius: 6px;
+  width: fit-content;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+}
+
 #hint {
   margin: 14px 0 0;
   font-size: 12px;

@@ -3,7 +3,7 @@ import { createCamera, updateCamera } from "./camera.js?v=5";
 import { createGame, updateGame } from "./game.js?v=5";
 import { drawWorld, drawEntities } from "./render.js?v=5";
 
-const VERSION = "0.7";
+const VERSION = "0.8";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -20,7 +20,7 @@ const welcomeEl = document.getElementById("welcome");
 function dismissWelcome() {
   if (started) return;
   started = true;
-  welcomeEl.classList.add("hidden");
+  welcomeEl.style.display = "none";
 }
 
 welcomeEl.addEventListener("click", dismissWelcome);

@@ -1,4 +1,4 @@
-import { createWorld, shrineCenter, randomWalkableNear } from "./world.js?v=5";
+import { createWorld, shrineCenter, randomWalkableNear, zorasDomainCenter } from "./world.js?v=5";
 import { spawnParty, updateParty } from "./hero.js?v=5";
 import { spawnMonsters, updateMonsters, createMonster, randomKind, lynelSpec } from "./monster.js?v=5";
 import { spawnChests, updateChests } from "./chest.js?v=5";
@@ -16,7 +16,7 @@ export function resetGame() {
   const heroes = spawnParty(world);
   const monsters = spawnMonsters(world);
   const chests = spawnChests(world);
-  updateHud(heroes, chests);
+  updateHud(heroes, chests, false);
   setBanner("");
   setWipe(false);
   return {
@@ -32,6 +32,7 @@ export function resetGame() {
     shrineWave: [],
     shrineBoss: null,
     shrineTriggered: false,
+    hasMedal: false,
   };
 }
 
@@ -82,7 +83,7 @@ export function updateGame(game, input, now, dt) {
     game.bannerUntil = now + 4500;
   }
 
-  updateHud(game.heroes, game.chests);
+  updateHud(game.heroes, game.chests, game.hasMedal);
 
   // --- Shrine puzzle state machine ---
   const shrine = shrineCenter(game.world);
@@ -115,9 +116,15 @@ export function updateGame(game, input, now, dt) {
     if (game.shrineBoss && game.shrineBoss.hp <= 0) {
       game.shrineBoss = null;
       game.shrineState = "completed";
+      game.hasMedal = true;
       sound.playVictory();
       healParty(game.heroes);
-      game.bannerText = "The shrine is sealed. The party is blessed!";
+      const dest = zorasDomainCenter(game.world);
+      for (const hero of game.heroes) {
+        hero.x = dest.x;
+        hero.y = dest.y;
+      }
+      game.bannerText = "The shrine is sealed. Medal earned! Teleported to Zora's Domain!";
       game.bannerUntil = now + 6000;
     }
   }
