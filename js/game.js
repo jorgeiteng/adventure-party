@@ -139,7 +139,7 @@ export function updateGame(game, input, now, dt) {
     setBanner("");
   }
 
-  if (game.heroes.every((hero) => hero.hp <= 0)) {
+  if (game.heroes[0].hp <= 0 && !game.wiped) {
     game.wiped = true;
     sound.playWipe();
     setWipe(true);

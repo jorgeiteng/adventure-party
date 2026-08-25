@@ -3,7 +3,7 @@ import { createCamera, updateCamera } from "./camera.js?v=5";
 import { createGame, updateGame } from "./game.js?v=5";
 import { drawWorld, drawEntities } from "./render.js?v=5";
 
-const VERSION = "0.6";
+const VERSION = "0.7";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -13,6 +13,19 @@ const game = createGame();
 window.__hp = { game, input, camera };
 
 document.getElementById("version").textContent = `v${VERSION}`;
+
+let started = false;
+const welcomeEl = document.getElementById("welcome");
+
+function dismissWelcome() {
+  if (started) return;
+  started = true;
+  welcomeEl.classList.add("hidden");
+}
+
+welcomeEl.addEventListener("click", dismissWelcome);
+window.addEventListener("keydown", dismissWelcome, { once: false });
+window.addEventListener("mousedown", dismissWelcome, { once: false });
 
 function resize() {
   const ratio = window.devicePixelRatio || 1;
@@ -33,8 +46,10 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  updateGame(game, input, now, dt);
-  updateCamera(camera, game.heroes[0], { width: camera.w, height: camera.h }, game.world);
+  if (started) {
+    updateGame(game, input, now, dt);
+    updateCamera(camera, game.heroes[0], { width: camera.w, height: camera.h }, game.world);
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const ratio = window.devicePixelRatio || 1;
