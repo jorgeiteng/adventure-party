@@ -247,12 +247,11 @@ export function updateGame(game, input, now, dt) {
               if (p.nextStep >= p.sequence.length) {
                 p.completed = true;
                 p.state = "done";
-                game.shrineState = "completed";
-                game.hasMedal = true;
-                sound.playVictory();
-                healParty(game.heroes);
-                game.bannerText = "Puzzle solved! Shrine medal earned!";
-                game.bannerUntil = now + 5000;
+                game.shrineState = "boss";
+                sound.playBossSpawn();
+                spawnBoss(game);
+                game.bannerText = "The shrine opens! A Lynel emerges!";
+                game.bannerUntil = now + 3000;
               }
             } else {
               p.wrongFlash = now + 600;
@@ -273,6 +272,26 @@ export function updateGame(game, input, now, dt) {
     }
   } else {
     game.nearShrine = false;
+  }
+
+  if (game.currentMap === "overworld" && game.shrineState === "boss") {
+    if (game.shrineBoss && game.shrineBoss.hp <= 0) {
+      const relicX = game.shrineBoss.x;
+      const relicY = game.shrineBoss.y;
+      game.shrineBoss = null;
+      game.shrineState = "completed";
+      game.hasMedal = true;
+      sound.playVictory();
+      healParty(game.heroes);
+      game.shrineRelics.push({
+        x: relicX,
+        y: relicY,
+        type: "lynel",
+        collected: false,
+      });
+      game.bannerText = "The Lynel is vanquished! A shrine relic appeared!";
+      game.bannerUntil = now + 5000;
+    }
   }
 
   if (game.currentMap === "cavern" && game.hasMedal) {
@@ -379,6 +398,8 @@ export function updateGame(game, input, now, dt) {
     } else if (game.puzzle.state === "input") {
       setBanner(`Your turn! ${game.puzzle.nextStep} / ${game.puzzle.sequence.length}`);
     }
+  } else if (game.shrineState === "boss" && game.shrineBoss && game.shrineBoss.hp > 0) {
+    setBanner("A Lynel emerges! Defeat it!");
   } else if (game.currentMap === "cavern" && game.cavernBossState === "boss" && game.cavernBoss && game.cavernBoss.hp > 0) {
     setBanner("Aquamentus lurks in the depths!");
   } else if (game.currentNpc) {

@@ -3,7 +3,7 @@ import { createCamera, updateCamera } from "./camera.js?v=5";
 import { createGame, updateGame } from "./game.js?v=5";
 import { drawWorld, drawEntities, drawPuzzleRunes, drawShrineRelics, setComplete } from "./render.js?v=5";
 
-const VERSION = "0.13";
+const VERSION = "0.14";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -57,7 +57,7 @@ function frame(now) {
   drawWorld(ctx, game.world, camera, now);
   drawPuzzleRunes(ctx, camera, game.puzzle, now);
   drawShrineRelics(ctx, camera, game.shrineRelics, now);
-  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now, game.cavernBoss, game.npcs);
+  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now, game.shrineBoss || game.cavernBoss, game.npcs);
   if (game.gameComplete) setComplete(true);
   requestAnimationFrame(frame);
 }
