@@ -3,10 +3,13 @@ import { spawnParty, updateParty } from "./hero.js?v=5";
 import { spawnMonsters, updateMonsters, createMonster, randomKind, lynelSpec, aquamentusSpec } from "./monster.js?v=5";
 import { spawnChests, updateChests } from "./chest.js?v=5";
 import { spawnNpcs, getNearbyNpc } from "./npc.js?v=5";
-import { updateHud, setBanner, setWipe } from "./render.js?v=5";
+import { updateHud, setBanner, setWipe, setComplete, drawShrineRelics } from "./render.js?v=5";
 import { sound } from "./audio.js?v=5";
 
 const WAVE_COUNT = 6;
+const RUNE_COUNT = 5;
+const RUNE_SYMBOLS = ["💧", "🔥", "⚡", "🌙", "⭐"];
+const RUNE_COLORS = ["#00bcd4", "#ff5722", "#ffeb3b", "#9c27b0", "#4caf50"];
 
 export function createGame() {
   return resetGame();
@@ -44,6 +47,19 @@ export function resetGame() {
     cavernBossState: "idle",
     nearPortal: false,
     portalCooldown: 0,
+    shrineRelics: [],
+    gameComplete: false,
+    puzzle: {
+      state: "inactive",
+      runes: [],
+      sequence: [],
+      playerSequence: [],
+      nextStep: 0,
+      showIndex: 0,
+      showTimer: 0,
+      wrongFlash: 0,
+      completed: false,
+    },
   };
 }
 
@@ -76,6 +92,53 @@ function healParty(heroes) {
   }
 }
 
+function initPuzzle(game) {
+  const center = shrineCenter(game.world);
+  const runes = [];
+  const sequence = [];
+  const usedAngles = [];
+
+  for (let i = 0; i < RUNE_COUNT; i++) {
+    let angle;
+    let attempts = 0;
+    do {
+      angle = (i / RUNE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+      attempts++;
+    } while (usedAngles.some((a) => Math.abs(a - angle) < 0.4) && attempts < 20);
+    usedAngles.push(angle);
+
+    const dist = 55 + Math.random() * 20;
+    const rx = center.x + Math.cos(angle) * dist;
+    const ry = center.y + Math.sin(angle) * dist;
+    runes.push({
+      x: rx,
+      y: ry,
+      symbol: RUNE_SYMBOLS[i],
+      color: RUNE_COLORS[i],
+      lit: false,
+      index: i,
+    });
+    sequence.push(i);
+  }
+
+  for (let i = sequence.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sequence[i], sequence[j]] = [sequence[j], sequence[i]];
+  }
+
+  game.puzzle = {
+    state: "showing",
+    runes,
+    sequence,
+    playerSequence: [],
+    nextStep: 0,
+    showIndex: 0,
+    showTimer: performance.now() + 800,
+    wrongFlash: 0,
+    completed: false,
+  };
+}
+
 function switchToCavern(game) {
   if (!game.cavernWorld) {
     game.cavernWorld = createCavernWorld();
@@ -106,11 +169,12 @@ function switchToOverworld(game) {
 }
 
 export function updateGame(game, input, now, dt) {
-  if (game.wiped) {
+  if (game.wiped || game.gameComplete) {
     if (input.wantsRestart()) {
       sound.playRestart();
       const next = resetGame();
       Object.assign(game, next);
+      setComplete(false);
     }
     return;
   }
@@ -150,37 +214,62 @@ export function updateGame(game, input, now, dt) {
     if (game.shrineState === "idle") {
       if (game.nearShrine && !game.shrineTriggered) {
         game.shrineTriggered = true;
-        game.shrineState = "defense";
+        game.shrineState = "puzzle";
         sound.playShrine();
-        spawnWaveMonsters(game);
-        game.bannerText = "Defend the shrine!";
+        initPuzzle(game);
+        game.bannerText = "Solve the rune puzzle to seal the shrine!";
         game.bannerUntil = now + 3000;
       }
-    } else if (game.shrineState === "defense") {
-      const allDead = game.shrineWave.every((m) => m.hp <= 0);
-      if (allDead) {
-        game.shrineWave = [];
-        game.shrineState = "boss";
-        sound.playBossSpawn();
-        spawnBoss(game);
-        game.bannerText = "A Lynel emerges!";
-        game.bannerUntil = now + 2500;
-      }
-    } else if (game.shrineState === "boss") {
-      if (game.shrineBoss && game.shrineBoss.hp <= 0) {
-        game.shrineBoss = null;
-        game.shrineState = "completed";
-        game.hasMedal = true;
-        sound.playVictory();
-        healParty(game.heroes);
-        const dest = zorasDomainCenter(game.world);
-        for (const hero of game.heroes) {
-          hero.x = dest.x;
-          hero.y = dest.y;
+    } else if (game.shrineState === "puzzle" && !game.puzzle.completed) {
+      const p = game.puzzle;
+      if (p.state === "showing") {
+        if (now > p.showTimer) {
+          if (p.showIndex < p.sequence.length) {
+            p.runes[p.sequence[p.showIndex]].lit = true;
+            p.showIndex++;
+            p.showTimer = now + 700;
+          } else {
+            p.state = "input";
+            p.runes.forEach((r) => (r.lit = false));
+          }
         }
-        game.bannerText = "The shrine is sealed. Medal earned! Teleported to Zora's Domain!";
-        game.bannerUntil = now + 6000;
+      } else if (p.state === "input") {
+        for (const rune of p.runes) {
+          const rdist = Math.hypot(leader.x - rune.x, leader.y - rune.y);
+          if (rdist < 28 && !rune.lit) {
+            const expectedIndex = p.sequence[p.nextStep];
+            if (rune.index === expectedIndex) {
+              rune.lit = true;
+              p.playerSequence.push(rune.index);
+              p.nextStep++;
+              sound.playShrine();
+
+              if (p.nextStep >= p.sequence.length) {
+                p.completed = true;
+                p.state = "done";
+                game.shrineState = "completed";
+                game.hasMedal = true;
+                sound.playVictory();
+                healParty(game.heroes);
+                game.bannerText = "Puzzle solved! Shrine medal earned!";
+                game.bannerUntil = now + 5000;
+              }
+            } else {
+              p.wrongFlash = now + 600;
+              p.state = "showing";
+              p.showIndex = 0;
+              p.showTimer = now + 800;
+              p.nextStep = 0;
+              p.playerSequence = [];
+              p.runes.forEach((r) => (r.lit = false));
+              setBanner("Wrong sequence! Watch again...");
+              game.bannerUntil = now + 2000;
+            }
+            break;
+          }
+        }
       }
+    } else if (game.shrineState === "completed") {
     }
   } else {
     game.nearShrine = false;
@@ -222,6 +311,29 @@ export function updateGame(game, input, now, dt) {
     game.portalCooldown = 0;
   }
 
+  for (const relic of game.shrineRelics) {
+    if (relic.collected) continue;
+    const dist = Math.hypot(leader.x - relic.x, leader.y - relic.y);
+    if (dist < 40) {
+      relic.collected = true;
+      sound.playVictory();
+      healParty(game.heroes);
+      if (relic.type === "lynel") {
+        game.bannerText = "Shrine entered! The blessing heals your entire party!";
+        game.bannerUntil = now + 5000;
+        const dest = zorasDomainCenter(game.world);
+        for (const hero of game.heroes) {
+          hero.x = dest.x;
+          hero.y = dest.y;
+        }
+      } else if (relic.type === "aquamentus") {
+        game.bannerText = "Shrine entered! The dragon's power restores your party!";
+        game.bannerUntil = now + 5000;
+        game.gameComplete = true;
+      }
+    }
+  }
+
   if (game.currentMap === "cavern" && game.cavernBossState === "idle") {
     const bossRoom = {
       x: game.world.bossRoom.tx * TILE + TILE / 2,
@@ -239,20 +351,34 @@ export function updateGame(game, input, now, dt) {
     }
   } else if (game.currentMap === "cavern" && game.cavernBossState === "boss") {
     if (game.cavernBoss && game.cavernBoss.hp <= 0) {
+      const relicX = game.cavernBoss.x;
+      const relicY = game.cavernBoss.y;
       game.cavernBoss = null;
       game.cavernBossState = "completed";
       sound.playVictory();
       healParty(game.heroes);
-      setBanner("Aquamentus defeated! The cavern is cleared!");
+      game.shrineRelics.push({
+        x: relicX,
+        y: relicY,
+        type: "aquamentus",
+        collected: false,
+      });
+      setBanner("Aquamentus is slain! A shrine relic appeared!");
       game.bannerUntil = now + 5000;
     }
   }
 
-  if (game.shrineState === "defense") {
-    const alive = game.shrineWave.filter((m) => m.hp > 0).length;
-    setBanner(`Defend the shrine! Enemies remaining: ${alive}`);
-  } else if (game.shrineState === "boss" && game.shrineBoss && game.shrineBoss.hp > 0) {
-    setBanner("A Lynel emerges! Defeat it!");
+  if (game.shrineState === "puzzle" && !game.puzzle.completed) {
+    if (game.puzzle.state === "showing") {
+      const next = game.puzzle.sequence[game.puzzle.showIndex];
+      if (next !== undefined) {
+        setBanner(`Watch the sequence... ${game.puzzle.showIndex + 1} / ${game.puzzle.sequence.length}`);
+      } else {
+        setBanner("Now repeat the sequence!");
+      }
+    } else if (game.puzzle.state === "input") {
+      setBanner(`Your turn! ${game.puzzle.nextStep} / ${game.puzzle.sequence.length}`);
+    }
   } else if (game.currentMap === "cavern" && game.cavernBossState === "boss" && game.cavernBoss && game.cavernBoss.hp > 0) {
     setBanner("Aquamentus lurks in the depths!");
   } else if (game.currentNpc) {
@@ -267,7 +393,12 @@ export function updateGame(game, input, now, dt) {
   } else if (game.nearPortal && game.hasMedal) {
     setBanner("Step into the portal to travel");
   } else {
-    setBanner("");
+    const nearRelic = game.shrineRelics.find((r) => !r.collected && Math.hypot(leader.x - r.x, leader.y - r.y) < 70);
+    if (nearRelic) {
+      setBanner("A shrine relic glows before you. Step into it!");
+    } else {
+      setBanner("");
+    }
   }
 
   if (game.heroes[0].hp <= 0 && !game.wiped) {

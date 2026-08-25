@@ -149,6 +149,36 @@ body {
   font-size: 16px;
 }
 
+#complete {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  padding: 28px 36px;
+  background: rgba(8, 30, 20, 0.92);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  border-radius: 10px;
+}
+
+#complete h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  color: #ffd700;
+}
+
+#complete p {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+#complete .welcome-hint {
+  margin-top: 16px;
+  font-size: 14px;
+  color: rgba(244, 234, 208, 0.5);
+}
+
 .hidden {
   display: none;
 }

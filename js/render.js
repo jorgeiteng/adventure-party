@@ -1531,6 +1531,93 @@ export function setWipe(show) {
   document.getElementById("wipe").classList.toggle("hidden", !show);
 }
 
+export function setComplete(show) {
+  document.getElementById("complete").classList.toggle("hidden", !show);
+}
+
+export function drawShrineRelics(ctx, camera, relics, time) {
+  for (const relic of relics) {
+    if (relic.collected) continue;
+    const p = worldToScreen(camera, relic.x, relic.y);
+    if (p.x < -40 || p.x > camera.w + 40 || p.y < -40 || p.y > camera.h + 40) continue;
+
+    const pulse = Math.sin(time * 0.004) * 4;
+    const glow = 0.4 + Math.sin(time * 0.003) * 0.3;
+
+    ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 20 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 12 + pulse * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = relic.type === "lynel" ? "#8b1a2a" : "#004d40";
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - 14);
+    ctx.lineTo(p.x + 10, p.y - 4);
+    ctx.lineTo(p.x + 6, p.y + 10);
+    ctx.lineTo(p.x - 6, p.y + 10);
+    ctx.lineTo(p.x - 10, p.y - 4);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#ffd700";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y - 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = 0; i < 3; i++) {
+      const angle = time * 0.002 + (i * Math.PI * 2) / 3;
+      const orbitR = 16 + pulse;
+      const ox = p.x + Math.cos(angle) * orbitR;
+      const oy = p.y + Math.sin(angle) * orbitR;
+      ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(ox, oy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+export function drawPuzzleRunes(ctx, camera, puzzle, time) {
+  if (!puzzle || puzzle.completed) return;
+  for (const rune of puzzle.runes) {
+    const p = worldToScreen(camera, rune.x, rune.y);
+    if (p.x < -40 || p.x > camera.w + 40 || p.y < -40 || p.y > camera.h + 40) continue;
+
+    const pulse = Math.sin(time * 0.005 + rune.index) * 2;
+    const isLit = rune.lit;
+
+    ctx.fillStyle = isLit
+      ? `${rune.color}66`
+      : "rgba(40, 30, 60, 0.5)";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 14 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = isLit ? rune.color : "rgba(150, 130, 180, 0.5)";
+    ctx.lineWidth = isLit ? 3 : 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 14 + pulse, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (isLit) {
+      ctx.fillStyle = `${rune.color}33`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 22 + pulse * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.font = "18px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(rune.symbol, p.x, p.y);
+  }
+}
+
 export function updateSoundButton(muted) {
   const btn = document.getElementById("sound-btn");
   if (btn) {
