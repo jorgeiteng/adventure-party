@@ -1,6 +1,6 @@
 import { createInput } from "./input.js";
 import { createCamera, updateCamera } from "./camera.js";
-import { createGame, updateGame } from "./game.js?v=3";
+import { createGame, updateGame } from "./game.js?v=4";
 import { drawWorld, drawEntities } from "./render.js";
 
 const canvas = document.getElementById("game");

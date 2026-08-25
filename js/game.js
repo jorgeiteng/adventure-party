@@ -2,6 +2,7 @@ import { createWorld, shrineCenter } from "./world.js?v=3";
 import { spawnParty, updateParty } from "./hero.js";
 import { spawnMonsters, updateMonsters } from "./monster.js";
 import { updateHud, setBanner, setWipe } from "./render.js";
+import { sound } from "./audio.js";
 
 export function createGame() {
   return resetGame();
@@ -26,6 +27,7 @@ export function resetGame() {
 export function updateGame(game, input, now, dt) {
   if (game.wiped) {
     if (input.wantsRestart()) {
+      sound.playRestart();
       const next = resetGame();
       Object.assign(game, next);
     }
@@ -38,8 +40,12 @@ export function updateGame(game, input, now, dt) {
 
   const shrine = shrineCenter(game.world);
   const leader = game.heroes[0];
+  const wasNearShrine = game.nearShrine;
   game.nearShrine = Math.hypot(leader.x - shrine.x, leader.y - shrine.y) < 48;
   if (game.nearShrine) {
+    if (!wasNearShrine) {
+      sound.playShrine();
+    }
     setBanner("The sealed shrine waits. The final trial comes in Phase 2.");
   } else {
     setBanner("");
@@ -47,7 +53,9 @@ export function updateGame(game, input, now, dt) {
 
   if (game.heroes.every((hero) => hero.hp <= 0)) {
     game.wiped = true;
+    sound.playWipe();
     setWipe(true);
     setBanner("");
   }
 }
+

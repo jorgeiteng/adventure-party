@@ -1,14 +1,33 @@
+import { sound } from "./audio.js";
+import { updateSoundButton } from "./render.js";
+
 export function createInput(canvas) {
   const keys = new Set();
   let attackQueued = false;
   const pointer = { x: 0, y: 0 };
 
+  const soundBtn = document.getElementById("sound-btn");
+  if (soundBtn) {
+    updateSoundButton(sound.isMuted());
+    soundBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sound.unlock();
+      sound.toggleMute();
+      updateSoundButton(sound.isMuted());
+    });
+  }
+
   function onKeyDown(event) {
+    sound.unlock();
     keys.add(event.code);
     if (event.code === "Space" || event.code.startsWith("Arrow")) {
       event.preventDefault();
     }
     if (event.code === "Space") attackQueued = true;
+    if (event.code === "KeyM") {
+      sound.toggleMute();
+      updateSoundButton(sound.isMuted());
+    }
   }
 
   function onKeyUp(event) {
@@ -16,12 +35,14 @@ export function createInput(canvas) {
   }
 
   function onPointer(event) {
+    sound.unlock();
     const rect = canvas.getBoundingClientRect();
     pointer.x = ((event.clientX - rect.left) / rect.width) * canvas.width;
     pointer.y = ((event.clientY - rect.top) / rect.height) * canvas.height;
   }
 
   function onClick(event) {
+    sound.unlock();
     onPointer(event);
     attackQueued = true;
   }
@@ -58,3 +79,4 @@ export function createInput(canvas) {
     },
   };
 }
+
