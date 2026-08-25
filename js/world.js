@@ -10,6 +10,10 @@ export const Tiles = {
   TREE: 4,
   ROCK: 5,
   SHRINE: 6,
+  CAVERN_FLOOR: 7,
+  CAVERN_WALL: 8,
+  CAVERN_WATER: 9,
+  PORTAL: 10,
 };
 
 function mulberry32(seed) {
@@ -40,7 +44,7 @@ function noise2(randGrid, x, y) {
 }
 
 export function isSolid(tile) {
-  return tile === Tiles.WATER || tile === Tiles.TREE || tile === Tiles.ROCK;
+  return tile === Tiles.WATER || tile === Tiles.TREE || tile === Tiles.ROCK || tile === Tiles.CAVERN_WALL || tile === Tiles.CAVERN_WATER;
 }
 
 export function createWorld(seed = 20260825) {
@@ -97,6 +101,8 @@ export function createWorld(seed = 20260825) {
   carveDisk(zorasDomain.tx, zorasDomain.ty, 4, Tiles.WATER);
   carveDisk(zorasDomain.tx, zorasDomain.ty, 2, Tiles.GRASS);
   carvePath(spawn.tx, spawn.ty, zorasDomain.tx, zorasDomain.ty);
+
+  tiles[zorasDomain.ty * MAP_W + zorasDomain.tx + 2] = Tiles.PORTAL;
 
   for (let i = 0; i < 90; i++) {
     const cx = 3 + Math.floor(rand() * (MAP_W - 6));
@@ -215,5 +221,89 @@ export function zorasDomainCenter(world) {
   return {
     x: world.zorasDomain.tx * TILE + TILE / 2,
     y: world.zorasDomain.ty * TILE + TILE / 2,
+  };
+}
+
+export function createCavernWorld(seed = 20260826) {
+  const rand = mulberry32(seed);
+  const hash = new Map();
+  const randGrid = (x, y) => {
+    const key = `${x},${y}`;
+    if (!hash.has(key)) hash.set(key, rand());
+    return hash.get(key);
+  };
+
+  const tiles = new Uint8Array(MAP_W * MAP_H);
+  const spawn = { tx: 32, ty: 56 };
+  const bossRoom = { tx: 32, ty: 12 };
+
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      const n = noise2(randGrid, x / 7, y / 7);
+      const n2 = noise2(randGrid, x / 4 + 15, y / 4 + 10);
+      let tile = Tiles.CAVERN_FLOOR;
+      if (n > 0.7 || (x < 4 || x > MAP_W - 5 || y < 4 || y > MAP_H - 5)) {
+        tile = Tiles.CAVERN_WALL;
+      } else if (n2 > 0.65) {
+        tile = Tiles.CAVERN_WATER;
+      }
+      tiles[y * MAP_W + x] = tile;
+    }
+  }
+
+  function carveDisk(cx, cy, radius, tile) {
+    for (let y = Math.floor(cy - radius); y <= Math.ceil(cy + radius); y++) {
+      for (let x = Math.floor(cx - radius); x <= Math.ceil(cx + radius); x++) {
+        if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
+        if ((x - cx) ** 2 + (y - cy) ** 2 <= radius * radius) {
+          tiles[y * MAP_W + x] = tile;
+        }
+      }
+    }
+  }
+
+  function carvePath(x0, y0, x1, y1) {
+    let x = x0;
+    let y = y0;
+    while (x !== x1 || y !== y1) {
+      carveDisk(x, y, 1.5, Tiles.CAVERN_FLOOR);
+      if (x !== x1 && (y === y1 || rand() > 0.45)) x += Math.sign(x1 - x);
+      else y += Math.sign(y1 - y);
+    }
+    carveDisk(x1, y1, 2, Tiles.CAVERN_FLOOR);
+  }
+
+  carveDisk(spawn.tx, spawn.ty, 4, Tiles.CAVERN_FLOOR);
+  carveDisk(bossRoom.tx, bossRoom.ty, 6, Tiles.CAVERN_FLOOR);
+  carvePath(spawn.tx, spawn.ty, bossRoom.tx, bossRoom.ty);
+
+  for (let i = 0; i < 60; i++) {
+    const cx = 5 + Math.floor(rand() * (MAP_W - 10));
+    const cy = 5 + Math.floor(rand() * (MAP_H - 10));
+    if (Math.hypot(cx - spawn.tx, cy - spawn.ty) < 6) continue;
+    if (Math.hypot(cx - bossRoom.tx, cy - bossRoom.ty) < 7) continue;
+    const size = 1 + Math.floor(rand() * 2);
+    for (let n = 0; n < size; n++) {
+      const x = cx + Math.floor(rand() * 3) - 1;
+      const y = cy + Math.floor(rand() * 3) - 1;
+      if (x < 2 || y < 2 || x >= MAP_W - 2 || y >= MAP_H - 2) continue;
+      const idx = y * MAP_W + x;
+      if (tiles[idx] === Tiles.CAVERN_FLOOR) {
+        tiles[idx] = Tiles.CAVERN_WATER;
+      }
+    }
+  }
+
+  tiles[spawn.ty * MAP_W + spawn.tx] = Tiles.PORTAL;
+
+  return {
+    tiles,
+    spawn,
+    bossRoom,
+    zorasDomain: { tx: 32, ty: 56 },
+    width: MAP_W * TILE,
+    height: MAP_H * TILE,
+    rand,
+    isCavern: true,
   };
 }

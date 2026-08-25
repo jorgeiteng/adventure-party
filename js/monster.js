@@ -47,6 +47,52 @@ const KINDS = [
   },
 ];
 
+const CAVERN_KINDS = [
+  {
+    id: "biri",
+    name: "Biri",
+    color: "#00e5ff",
+    accent: "#006064",
+    r: 8,
+    speed: 70,
+    maxHp: 22,
+    damage: 6,
+    attackRange: 14,
+    attackCooldown: 600,
+    aggro: 140,
+    knockback: 25,
+    hover: true,
+  },
+  {
+    id: "tektite",
+    name: "Tektite",
+    color: "#1a237e",
+    accent: "#4a148c",
+    r: 10,
+    speed: 95,
+    maxHp: 32,
+    damage: 10,
+    attackRange: 16,
+    attackCooldown: 750,
+    aggro: 170,
+    knockback: 45,
+  },
+  {
+    id: "darkutch",
+    name: "Darknut",
+    color: "#263238",
+    accent: "#b71c1c",
+    r: 13,
+    speed: 40,
+    maxHp: 55,
+    damage: 14,
+    attackRange: 18,
+    attackCooldown: 1100,
+    aggro: 120,
+    knockback: 20,
+  },
+];
+
 const LYNEL_SPEC = {
   id: "lynel",
   name: "Lynel",
@@ -60,6 +106,21 @@ const LYNEL_SPEC = {
   attackCooldown: 800,
   aggro: 300,
   knockback: 70,
+};
+
+const AQUAMENTUS_SPEC = {
+  id: "aquamentus",
+  name: "Aquamentus",
+  color: "#004d40",
+  accent: "#00bcd4",
+  r: 22,
+  speed: 45,
+  maxHp: 180,
+  damage: 22,
+  attackRange: 28,
+  attackCooldown: 1200,
+  aggro: 350,
+  knockback: 80,
 };
 
 export function createMonster(spec, x, y) {
@@ -87,8 +148,9 @@ export function spawnMonsters(world, count = 22) {
     x: world.spawn.tx * TILE + TILE / 2,
     y: world.spawn.ty * TILE + TILE / 2,
   };
+  const kinds = world.isCavern ? CAVERN_KINDS : KINDS;
   for (let i = 0; i < count; i++) {
-    const spec = KINDS[Math.floor(world.rand() * KINDS.length)];
+    const spec = kinds[Math.floor(world.rand() * kinds.length)];
     const pos = randomWalkable(world, spawnPx, 140);
     list.push(createMonster(spec, pos.x, pos.y));
   }
@@ -143,9 +205,14 @@ export function updateMonsters(monsters, heroes, world, now, dt) {
 }
 
 export function randomKind(world) {
-  return KINDS[Math.floor(world.rand() * KINDS.length)];
+  const kinds = world.isCavern ? CAVERN_KINDS : KINDS;
+  return kinds[Math.floor(world.rand() * kinds.length)];
 }
 
 export function lynelSpec() {
   return LYNEL_SPEC;
+}
+
+export function aquamentusSpec() {
+  return AQUAMENTUS_SPEC;
 }

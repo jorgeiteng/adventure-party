@@ -88,13 +88,76 @@ function drawShrine(ctx, x, y, time) {
   ctx.fill();
 }
 
+function drawCavernFloor(ctx, x, y, tx, ty) {
+  const shade = ((tx * 7 + ty * 13) % 5) * 3;
+  ctx.fillStyle = `rgb(${35 + shade}, ${30 + shade}, ${50 + shade})`;
+  ctx.fillRect(x, y, TILE, TILE);
+  ctx.fillStyle = `rgba(60, 50, 80, 0.3)`;
+  ctx.fillRect(x + 2, y + 2, TILE - 4, 1);
+}
+
+function drawCavernWater(ctx, x, y, time) {
+  ctx.fillStyle = "#0d1b2a";
+  ctx.fillRect(x, y, TILE, TILE);
+  const wave = Math.sin(time * 0.002 + x * 0.1) * 2;
+  ctx.fillStyle = "rgba(0, 188, 212, 0.25)";
+  ctx.fillRect(x, y + 8 + wave, TILE, 6);
+  ctx.fillStyle = "rgba(0, 229, 255, 0.15)";
+  ctx.fillRect(x + 4, y + 12 + wave, TILE - 8, 3);
+}
+
+function drawCavernWall(ctx, x, y) {
+  ctx.fillStyle = "#1a1a2e";
+  ctx.fillRect(x, y, TILE, TILE);
+  ctx.fillStyle = "#252540";
+  ctx.fillRect(x + 2, y + 2, 8, 8);
+  ctx.fillRect(x + 18, y + 14, 10, 10);
+  ctx.fillStyle = "#0f0f1e";
+  ctx.fillRect(x + 12, y + 6, 6, 4);
+}
+
+function drawPortal(ctx, x, y, time) {
+  ctx.fillStyle = "#1a1a2e";
+  ctx.fillRect(x, y, TILE, TILE);
+  const cx = x + TILE / 2;
+  const cy = y + TILE / 2;
+  const pulse = Math.sin(time * 0.004) * 3;
+  const glow = 0.5 + Math.sin(time * 0.003) * 0.3;
+
+  ctx.fillStyle = `rgba(0, 229, 255, ${glow * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 14 + pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = `rgba(0, 188, 212, ${glow * 0.5})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 9 + pulse * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = `rgba(224, 247, 250, ${glow * 0.8})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (let i = 0; i < 3; i++) {
+    const angle = time * 0.002 + (i * Math.PI * 2) / 3;
+    const orbitR = 8 + pulse;
+    const ox = cx + Math.cos(angle) * orbitR;
+    const oy = cy + Math.sin(angle) * orbitR;
+    ctx.fillStyle = `rgba(0, 229, 255, ${glow * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(ox, oy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 export function drawWorld(ctx, world, camera, time) {
   const minTx = Math.max(0, Math.floor(camera.x / TILE));
   const maxTx = Math.min(MAP_W - 1, Math.floor((camera.x + camera.w) / TILE));
   const minTy = Math.max(0, Math.floor(camera.y / TILE));
   const maxTy = Math.min(MAP_H - 1, Math.floor((camera.y + camera.h) / TILE));
 
-  ctx.fillStyle = "#2a5a38";
+  ctx.fillStyle = world.isCavern ? "#1a1a2e" : "#2a5a38";
   ctx.fillRect(0, 0, camera.w, camera.h);
 
   for (let ty = minTy; ty <= maxTy; ty++) {
@@ -107,6 +170,10 @@ export function drawWorld(ctx, world, camera, time) {
       else if (tile === Tiles.TREE) drawGrass(ctx, p.x, p.y, 0.7);
       else if (tile === Tiles.ROCK) drawGrass(ctx, p.x, p.y, 0.4);
       else if (tile === Tiles.SHRINE) drawShrine(ctx, p.x, p.y, time);
+      else if (tile === Tiles.CAVERN_FLOOR) drawCavernFloor(ctx, p.x, p.y, tx, ty);
+      else if (tile === Tiles.CAVERN_WATER) drawCavernWater(ctx, p.x, p.y, time);
+      else if (tile === Tiles.CAVERN_WALL) drawCavernWall(ctx, p.x, p.y);
+      else if (tile === Tiles.PORTAL) drawPortal(ctx, p.x, p.y, time);
       else drawGrass(ctx, p.x, p.y, (tx * 13 + ty * 7) % 10 / 10);
     }
   }
@@ -941,6 +1008,215 @@ function drawLynel(ctx, entity, time, flash) {
   }
 }
 
+function drawBiri(ctx, entity, time, flash) {
+  const r = entity.r;
+  const pulse = Math.sin(time * 0.005) * 0.15 + 1;
+  const zapPhase = time * 0.012;
+
+  ctx.fillStyle = flash ? "#ffffff" : "rgba(0, 229, 255, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 1.3 * pulse, r * 1.1 * pulse, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#e0f7fa";
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!flash) {
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.6)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const angle = zapPhase + (i * Math.PI * 2) / 4;
+      const outerR = r * 1.5 + Math.sin(zapPhase + i) * 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * r * 0.5, Math.sin(angle) * r * 0.5);
+      ctx.lineTo(Math.cos(angle) * outerR, Math.sin(angle) * outerR);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = flash ? "#ffffff" : "#001a1a";
+  ctx.beginPath();
+  ctx.arc(-2, -2, 1.5, 0, Math.PI * 2);
+  ctx.arc(2, -2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTektite(ctx, entity, time, flash) {
+  const r = entity.r;
+  const legPhase = Math.sin(time * 0.008);
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 2; i++) {
+      const lx = (i - 0.5) * r * 0.6;
+      const wag = legPhase * side * 4 * (i % 2 === 0 ? 1 : -1);
+      ctx.beginPath();
+      ctx.moveTo(lx, r * 0.2);
+      ctx.lineTo(lx + wag, r * 0.9 + side * 3);
+      ctx.lineTo(lx + wag + side * 3, r * 1.1);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.9, r * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, -r * 0.15, r * 0.25, 0, Math.PI * 2);
+  ctx.arc(r * 0.3, -r * 0.15, r * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#e040fb";
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, -r * 0.15, 2, 0, Math.PI * 2);
+  ctx.arc(r * 0.3, -r * 0.15, 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawDarknut(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+
+  ctx.fillStyle = flash ? "#ffffff" : "#1a1a1a";
+  ctx.fillRect(-r * 0.35, r * 0.3, r * 0.7, r * 0.6);
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.1, r * 0.7, r * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  ctx.fillRect(-r * 0.4, -r * 0.5, r * 0.8, r * 0.3);
+
+  ctx.fillStyle = flash ? "#ffffff" : "#ffd700";
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.1, -r * 0.7);
+  ctx.lineTo(0, -r * 1.0);
+  ctx.lineTo(r * 0.1, -r * 0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#ff1744";
+  ctx.beginPath();
+  ctx.arc(-r * 0.2, -r * 0.55, 2, 0, Math.PI * 2);
+  ctx.arc(r * 0.2, -r * 0.55, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.translate(r * 0.4, r * 0.1);
+  let swordAngle = 0.4;
+  if (isAttacking) swordAngle = -0.8 + Math.sin(time * 0.03) * 0.7;
+  ctx.rotate(swordAngle);
+
+  ctx.strokeStyle = flash ? "#ffffff" : "#78909c";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-4, 0);
+  ctx.lineTo(20, 0);
+  ctx.stroke();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#b0bec5";
+  ctx.beginPath();
+  ctx.moveTo(18, -3);
+  ctx.lineTo(26, 0);
+  ctx.lineTo(18, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#263238";
+  ctx.fillRect(-r * 0.5, -r * 0.1, r * 0.25, r * 0.5);
+  ctx.fillRect(r * 0.25, -r * 0.1, r * 0.25, r * 0.5);
+}
+
+function drawAquamentus(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const bodyColor = flash ? "#ffffff" : entity.color;
+  const breathPhase = Math.sin(time * 0.003) * 2;
+
+  ctx.fillStyle = flash ? "#ffffff" : "#00261f";
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.3, r * 1.1, r * 0.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.85, r * 0.95, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  for (let i = 0; i < 5; i++) {
+    const angle = -Math.PI * 0.3 + (i * Math.PI * 0.6) / 4;
+    const sx = Math.cos(angle) * r * 0.6;
+    const sy = Math.sin(angle) * r * 0.6 - r * 0.2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + Math.cos(angle) * 8, sy + Math.sin(angle) * 8 - 4);
+    ctx.lineTo(sx + Math.cos(angle) * 4 + 3, sy + Math.sin(angle) * 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.fillStyle = flash ? "#ffffff" : "#001a1a";
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, -r * 0.25, 4, 0, Math.PI * 2);
+  ctx.arc(r * 0.3, -r * 0.25, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#00e5ff";
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, -r * 0.25, 2, 0, Math.PI * 2);
+  ctx.arc(r * 0.3, -r * 0.25, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#b2dfdb";
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.5, r * 0.4, r * 0.2 + breathPhase, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#1a1a1a";
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.15, r * 0.5);
+  ctx.lineTo(r * 0.15, r * 0.5);
+  ctx.lineTo(0, r * 0.35);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = flash ? "#ffffff" : "#00838f";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.6, r * 0.3);
+  ctx.quadraticCurveTo(-r * 1.2, r * 0.8 + breathPhase, -r * 1.0, r * 1.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.6, r * 0.3);
+  ctx.quadraticCurveTo(r * 1.2, r * 0.8 - breathPhase, r * 1.0, r * 1.2);
+  ctx.stroke();
+
+  if (isAttacking) {
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.7)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, r * 0.5, 18, -0.5, 0.5);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(0, 229, 255, 0.4)";
+    ctx.beginPath();
+    ctx.arc(0, r * 0.5 + 8, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawCreature(ctx, camera, entity, time) {
   if (entity.hp <= 0) return;
   const p = worldToScreen(camera, entity.x, entity.y);
@@ -968,6 +1244,14 @@ function drawCreature(ctx, camera, entity, time) {
       drawSkyGnat(ctx, entity, time, flash);
     } else if (entity.id === "lynel") {
       drawLynel(ctx, entity, time, flash);
+    } else if (entity.id === "biri") {
+      drawBiri(ctx, entity, time, flash);
+    } else if (entity.id === "tektite") {
+      drawTektite(ctx, entity, time, flash);
+    } else if (entity.id === "darkutch") {
+      drawDarknut(ctx, entity, time, flash);
+    } else if (entity.id === "aquamentus") {
+      drawAquamentus(ctx, entity, time, flash);
     } else {
       ctx.fillStyle = flash ? "#fff6d8" : entity.color;
       ctx.beginPath();
@@ -1111,11 +1395,61 @@ function drawChest(ctx, camera, chest, time) {
   }
 }
 
-export function drawEntities(ctx, camera, heroes, monsters, chests, time, boss) {
-  const all = [...(chests || []), ...heroes, ...monsters].sort((a, b) => a.y - b.y);
+export function drawNpc(ctx, camera, npc, time) {
+  const p = { x: npc.x - camera.x, y: npc.y - camera.y };
+  const s = npc.size || 1;
+  const bob = Math.sin(time * 0.002 + npc.x) * 1.5;
+
+  ctx.save();
+  ctx.translate(p.x, p.y + bob);
+
+  ctx.fillStyle = "#0b1a12";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 7 * s, 3 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = npc.color;
+  ctx.beginPath();
+  ctx.ellipse(0, -2, 6 * s, 8 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = npc.accent;
+  ctx.beginPath();
+  ctx.arc(0, -8 * s, 5 * s, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-2 * s, -9 * s, 1.2 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(2 * s, -9 * s, 1.2 * s, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = npc.accent;
+  ctx.beginPath();
+  ctx.moveTo(-4 * s, -14 * s);
+  ctx.lineTo(0, -18 * s);
+  ctx.lineTo(4 * s, -14 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.font = `bold ${Math.round(10 * s)}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "#fef08a";
+  ctx.fillText(npc.name, 0, -20 * s);
+
+  ctx.restore();
+}
+
+export function drawEntities(ctx, camera, heroes, monsters, chests, time, boss, npcs) {
+  const all = [...(chests || []), ...heroes, ...monsters, ...(npcs || [])].sort((a, b) => a.y - b.y);
   for (const entity of all) {
     if (entity.loot) {
       drawChest(ctx, camera, entity, time);
+    } else if (entity.role && entity.dialogue) {
+      drawNpc(ctx, camera, entity, time);
     } else {
       drawCreature(ctx, camera, entity, time);
     }

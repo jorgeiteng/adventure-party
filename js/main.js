@@ -3,7 +3,7 @@ import { createCamera, updateCamera } from "./camera.js?v=5";
 import { createGame, updateGame } from "./game.js?v=5";
 import { drawWorld, drawEntities } from "./render.js?v=5";
 
-const VERSION = "0.8";
+const VERSION = "0.11";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -55,7 +55,7 @@ function frame(now) {
   const ratio = window.devicePixelRatio || 1;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawWorld(ctx, game.world, camera, now);
-  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now, game.shrineBoss);
+  drawEntities(ctx, camera, game.heroes, game.monsters, game.chests, now, game.shrineBoss || game.cavernBoss, game.npcs);
   requestAnimationFrame(frame);
 }
 
