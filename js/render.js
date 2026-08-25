@@ -591,6 +591,203 @@ function drawBillieJean(ctx, entity, time, flash) {
   }
 }
 
+function drawMossCrawler(ctx, entity, time, flash) {
+  const r = entity.r;
+  const legPhase = Math.sin(time * 0.008);
+
+  ctx.strokeStyle = flash ? "#ffffff" : entity.accent;
+  ctx.lineWidth = 1.6;
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 3; i++) {
+      const lx = -r * 0.3 + i * r * 0.4;
+      const wag = legPhase * side * 2 * (i % 2 === 0 ? 1 : -1);
+      ctx.beginPath();
+      ctx.moveTo(lx, 0);
+      ctx.lineTo(lx + wag, side * r * 0.75 + side * 4);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r, r * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#5a7d2e";
+  ctx.beginPath();
+  ctx.arc(-r * 0.3, -r * 0.25, 3.5, 0, Math.PI * 2);
+  ctx.arc(r * 0.2, -r * 0.35, 2.8, 0, Math.PI * 2);
+  ctx.arc(r * 0.1, r * 0.3, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.2, r * 0.7, r * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const antWag = Math.sin(time * 0.006) * 3;
+  ctx.strokeStyle = flash ? "#ffffff" : entity.accent;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.3, -r * 0.7);
+  ctx.quadraticCurveTo(-r * 0.6, -r * 1.1 + antWag, -r * 0.4, -r * 1.3 + antWag);
+  ctx.moveTo(r * 0.3, -r * 0.7);
+  ctx.quadraticCurveTo(r * 0.6, -r * 1.1 - antWag, r * 0.4, -r * 1.3 - antWag);
+  ctx.stroke();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#a3c74e";
+  ctx.beginPath();
+  ctx.arc(-r * 0.4, -r * 1.3 + antWag, 1.5, 0, Math.PI * 2);
+  ctx.arc(r * 0.4, -r * 1.3 - antWag, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#e8d44d";
+  ctx.beginPath();
+  ctx.arc(-r * 0.35, -r * 0.15, 2.2, 0, Math.PI * 2);
+  ctx.arc(r * 0.35, -r * 0.15, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = flash ? "#ffffff" : "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(-r * 0.35, -r * 0.15, 1, 0, Math.PI * 2);
+  ctx.arc(r * 0.35, -r * 0.15, 1, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawFanglet(ctx, entity, time, flash) {
+  const r = entity.r;
+  const tailWag = Math.sin(time * 0.012) * 4;
+
+  ctx.strokeStyle = flash ? "#ffffff" : entity.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.6, 0);
+  ctx.quadraticCurveTo(-r * 1.2, tailWag, -r * 1.5, tailWag * 0.5);
+  ctx.stroke();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#d4a574";
+  ctx.beginPath();
+  ctx.arc(-r * 1.5, tailWag * 0.5, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.95, r * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#d4a574";
+  ctx.beginPath();
+  ctx.ellipse(r * 0.15, r * 0.1, r * 0.45, r * 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.15, -r * 0.7);
+  ctx.lineTo(-r * 0.4, -r * 1.3);
+  ctx.lineTo(r * 0.1, -r * 0.65);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.15, -r * 0.7);
+  ctx.lineTo(r * 0.4, -r * 1.3);
+  ctx.lineTo(r * 0.4, -r * 0.65);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#c4826e";
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.12, -r * 0.75);
+  ctx.lineTo(-r * 0.32, -r * 1.1);
+  ctx.lineTo(r * 0.02, -r * 0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#f5e6c8";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.25, -r * 0.15, 2.5, 1.8, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(r * 0.25, -r * 0.15, 2.5, 1.8, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = flash ? "#ffffff" : "#8b1a1a";
+  ctx.beginPath();
+  ctx.arc(-r * 0.25, -r * 0.15, 1.2, 0, Math.PI * 2);
+  ctx.arc(r * 0.25, -r * 0.15, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#f0f0f0";
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.15, r * 0.35);
+  ctx.lineTo(-r * 0.08, r * 0.7);
+  ctx.lineTo(-r * 0.02, r * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.15, r * 0.35);
+  ctx.lineTo(r * 0.08, r * 0.7);
+  ctx.lineTo(r * 0.02, r * 0.35);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawSkyGnat(ctx, entity, time, flash) {
+  const r = entity.r;
+  const wingAngle = Math.sin(time * 0.025) * 0.6;
+
+  ctx.save();
+  ctx.rotate(-0.3 + wingAngle);
+  ctx.fillStyle = flash ? "rgba(255,255,255,0.6)" : "rgba(180, 170, 220, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.4, -r * 0.5, r * 0.9, r * 0.4, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = flash ? "#ffffff" : "rgba(120, 100, 180, 0.6)";
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.rotate(0.3 - wingAngle);
+  ctx.fillStyle = flash ? "rgba(255,255,255,0.6)" : "rgba(180, 170, 220, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(r * 0.4, -r * 0.5, r * 0.9, r * 0.4, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = flash ? "#ffffff" : "rgba(120, 100, 180, 0.6)";
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.color;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.65, r * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : entity.accent;
+  ctx.beginPath();
+  ctx.arc(0, -r * 0.65, r * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#c8b8e8";
+  ctx.beginPath();
+  ctx.arc(-r * 0.22, -r * 0.72, 1.8, 0, Math.PI * 2);
+  ctx.arc(r * 0.22, -r * 0.72, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = flash ? "#ffffff" : "#5a4a8a";
+  ctx.beginPath();
+  ctx.moveTo(0, r * 0.8);
+  ctx.lineTo(-1.5, r * 1.2);
+  ctx.lineTo(1.5, r * 1.2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = flash ? "#ffffff" : entity.accent;
+  ctx.lineWidth = 0.8;
+  for (let i = -1; i <= 1; i++) {
+    const legDangle = Math.sin(time * 0.01 + i) * 2;
+    ctx.beginPath();
+    ctx.moveTo(i * r * 0.25, r * 0.3);
+    ctx.lineTo(i * r * 0.35, r * 0.8 + legDangle);
+    ctx.stroke();
+  }
+}
+
 function drawCreature(ctx, camera, entity, time) {
   if (entity.hp <= 0) return;
   const p = worldToScreen(camera, entity.x, entity.y);

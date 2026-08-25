@@ -347,6 +347,8 @@ class SoundEngine {
       osc.start(t);
       osc.stop(t + 1.45);
     });
+  }
+
   /**
    * Treasure chest opened fanfare (sparkling discovery chime)
    */
@@ -386,6 +388,8 @@ class SoundEngine {
     });
   }
 
+  /**
+   * Party wipe melancholy descent
    */
   playWipe() {
     const ctx = this.ensureContext();
