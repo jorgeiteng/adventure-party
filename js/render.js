@@ -121,6 +121,476 @@ export function drawWorld(ctx, world, camera, time) {
   }
 }
 
+
+
+function drawHeroEyes(ctx, r, flash) {
+  if (flash) {
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(r * 0.45, -2, 1.4, 0, Math.PI * 2);
+    ctx.arc(r * 0.45, 2, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  ctx.fillStyle = "#1e1b29";
+  ctx.beginPath();
+  ctx.arc(r * 0.48, -2.1, 1.3, 0, Math.PI * 2);
+  ctx.arc(r * 0.48, 2.1, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(r * 0.52, -2.4, 0.5, 0, Math.PI * 2);
+  ctx.arc(r * 0.52, 1.8, 0.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawCody(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const skinColor = flash ? "#ffffff" : "#fddbb0";
+  const tunicColor = flash ? "#fff6d8" : entity.color;
+  const darkColor = flash ? "#ffffff" : entity.accent;
+
+  // Tunic body
+  ctx.fillStyle = tunicColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.95, r * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Belt
+  ctx.fillStyle = flash ? "#ffffff" : "#4a3520";
+  ctx.fillRect(-r * 0.2, -r * 0.8, 2.5, r * 1.6);
+  ctx.fillStyle = flash ? "#ffffff" : "#f1c40f";
+  ctx.fillRect(-r * 0.2, -2, 2.5, 4);
+
+  // Left hand: Round Shield (-Y)
+  ctx.save();
+  ctx.translate(r * 0.2, -r * 0.85);
+  ctx.fillStyle = flash ? "#ffffff" : "#7c4a1e";
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = flash ? "#ffffff" : "#d0d7de";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.fillStyle = flash ? "#ffffff" : "#f1c40f";
+  ctx.beginPath();
+  ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.22, 0, r * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Adventurer Cap
+  ctx.fillStyle = tunicColor;
+  ctx.beginPath();
+  ctx.moveTo(r * 0.3, -r * 0.6);
+  ctx.quadraticCurveTo(-r * 0.2, -r * 0.8, -r * 0.9, -r * 0.2);
+  ctx.lineTo(-r * 0.2, r * 0.6);
+  ctx.quadraticCurveTo(r * 0.3, r * 0.6, r * 0.45, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cap trim & front hair fringe
+  ctx.strokeStyle = darkColor;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(r * 0.2, 0, r * 0.6, -1.2, 1.2);
+  ctx.stroke();
+
+  if (!flash) {
+    ctx.fillStyle = "#6d4c27";
+    ctx.beginPath();
+    ctx.arc(r * 0.4, -3, 1.5, 0, Math.PI * 2);
+    ctx.arc(r * 0.4, 3, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eyes
+  drawHeroEyes(ctx, r, flash);
+
+  // Right hand & Broadsword (+Y)
+  ctx.save();
+  const handX = r * 0.3;
+  const handY = r * 0.8;
+  ctx.translate(handX, handY);
+
+  let swordAngle = 0.2;
+  let swordLen = 14;
+  if (isAttacking) {
+    swordAngle = -0.7 + Math.sin(time * 0.03) * 0.5;
+    swordLen = 16;
+  }
+  ctx.rotate(swordAngle);
+
+  // Sword hilt & crossguard
+  ctx.fillStyle = flash ? "#ffffff" : "#c99700";
+  ctx.fillRect(-1, -3, 2.5, 6);
+  ctx.fillStyle = flash ? "#ffffff" : "#5d4037";
+  ctx.fillRect(-3.5, -1, 3, 2);
+
+  // Steel blade
+  ctx.fillStyle = flash ? "#ffffff" : "#e4eaed";
+  ctx.beginPath();
+  ctx.moveTo(1.5, -2);
+  ctx.lineTo(1.5 + swordLen, 0);
+  ctx.lineTo(1.5, 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = flash ? "#ffffff" : "#94a3b8";
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Hand node
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(handX, handY, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Slash trail arc
+  if (isAttacking) {
+    ctx.strokeStyle = "rgba(240, 246, 252, 0.85)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 13, -0.8, 0.8);
+    ctx.stroke();
+  }
+}
+
+function drawZack(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const skinColor = flash ? "#ffffff" : "#fcd0a1";
+  const tunicColor = flash ? "#fff6d8" : entity.color;
+  const darkColor = flash ? "#ffffff" : entity.accent;
+
+  // Trailing headband scarf ribbons (-X)
+  const ribbonWag = Math.sin(time * 0.015) * 3;
+  ctx.strokeStyle = tunicColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.5, -2);
+  ctx.quadraticCurveTo(-r * 1.1, -4 + ribbonWag, -r * 1.5, -3 + ribbonWag);
+  ctx.moveTo(-r * 0.5, 2);
+  ctx.quadraticCurveTo(-r * 1.1, 4 - ribbonWag, -r * 1.5, 5 - ribbonWag);
+  ctx.stroke();
+
+  // Tunic body
+  ctx.fillStyle = tunicColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.95, r * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rogue dark vest straps
+  ctx.fillStyle = darkColor;
+  ctx.fillRect(-r * 0.3, -r * 0.85, 3, r * 1.7);
+
+  // Head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.2, 0, r * 0.58, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spiky dark hair
+  if (!flash) {
+    ctx.fillStyle = "#221929";
+    ctx.beginPath();
+    ctx.moveTo(r * 0.2, -r * 0.6);
+    ctx.lineTo(-r * 0.4, -r * 0.8);
+    ctx.lineTo(-r * 0.2, -r * 0.3);
+    ctx.lineTo(-r * 0.7, 0);
+    ctx.lineTo(-r * 0.2, r * 0.3);
+    ctx.lineTo(-r * 0.4, r * 0.8);
+    ctx.lineTo(r * 0.2, r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Headband
+  ctx.fillStyle = tunicColor;
+  ctx.fillRect(-r * 0.1, -r * 0.6, 2.5, r * 1.2);
+
+  // Eyes
+  drawHeroEyes(ctx, r, flash);
+
+  // Dual Daggers (Left and Right hands)
+  const leftX = r * 0.4;
+  const leftY = -r * 0.75;
+  const rightX = r * 0.4;
+  const rightY = r * 0.75;
+
+  const dagExt = isAttacking ? 4 : 0;
+
+  // Left Dagger
+  ctx.save();
+  ctx.translate(leftX + dagExt, leftY);
+  ctx.fillStyle = flash ? "#ffffff" : "#d0d7de";
+  ctx.beginPath();
+  ctx.moveTo(0, -1);
+  ctx.lineTo(9, -2);
+  ctx.lineTo(2, 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Right Dagger
+  ctx.save();
+  ctx.translate(rightX + dagExt, rightY);
+  ctx.fillStyle = flash ? "#ffffff" : "#d0d7de";
+  ctx.beginPath();
+  ctx.moveTo(0, 1);
+  ctx.lineTo(9, 2);
+  ctx.lineTo(2, -2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Hands
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(leftX + dagExt, leftY, 2, 0, Math.PI * 2);
+  ctx.arc(rightX + dagExt, rightY, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dual Cross-Slash Flurry Arc
+  if (isAttacking) {
+    ctx.strokeStyle = "#ff4d4d";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(r * 0.3, 0, r + 9, -0.75, 0.75);
+    ctx.stroke();
+  }
+}
+
+function drawJustin(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const skinColor = flash ? "#ffffff" : "#ffdeb8";
+  const tunicColor = flash ? "#fff6d8" : entity.color;
+  const darkColor = flash ? "#ffffff" : entity.accent;
+
+  // Ponytail (-X)
+  const hairWag = Math.sin(time * 0.014) * 2.5;
+  if (!flash) {
+    ctx.fillStyle = "#3e2723";
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.4, 0);
+    ctx.quadraticCurveTo(-r * 0.9, hairWag, -r * 1.4, hairWag * 1.5);
+    ctx.lineTo(-r * 0.5, 3);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Tunic body
+  ctx.fillStyle = tunicColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.95, r * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scout shoulder pauldron (-Y)
+  ctx.fillStyle = darkColor;
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.1, -r * 0.75, 3.5, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.22, 0, r * 0.58, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Blue scout circlet / headband
+  ctx.fillStyle = tunicColor;
+  ctx.fillRect(r * 0.1, -r * 0.58, 2.5, r * 1.16);
+  ctx.fillStyle = flash ? "#ffffff" : "#e0f2fe";
+  ctx.fillRect(r * 0.1, -1.2, 2.5, 2.4);
+
+  // Hair bangs
+  if (!flash) {
+    ctx.fillStyle = "#3e2723";
+    ctx.beginPath();
+    ctx.arc(r * 0.1, -r * 0.45, 2, 0, Math.PI * 2);
+    ctx.arc(r * 0.1, r * 0.45, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eyes
+  drawHeroEyes(ctx, r, flash);
+
+  // Long Spear (reaching forward +X)
+  const thrust = isAttacking ? 8 : 0;
+  const spearY = r * 0.35;
+  const shaftStart = -r * 0.6 + thrust;
+  const shaftEnd = r + 16 + thrust;
+
+  // Wooden Spear Shaft
+  ctx.strokeStyle = flash ? "#ffffff" : "#8d6e63";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(shaftStart, spearY);
+  ctx.lineTo(shaftEnd, spearY * 0.3);
+  ctx.stroke();
+
+  // Azure Pennant / Ribbon
+  ctx.fillStyle = tunicColor;
+  ctx.beginPath();
+  ctx.moveTo(shaftEnd - 6, spearY * 0.4);
+  ctx.lineTo(shaftEnd - 12, spearY * 0.4 + 4 + Math.sin(time * 0.02) * 2);
+  ctx.lineTo(shaftEnd - 6, spearY * 0.4 + 2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gleaming Diamond Spearhead
+  ctx.fillStyle = flash ? "#ffffff" : "#f1f5f9";
+  ctx.strokeStyle = flash ? "#ffffff" : "#64748b";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(shaftEnd - 4, spearY * 0.3 - 3);
+  ctx.lineTo(shaftEnd + 6, spearY * 0.3);
+  ctx.lineTo(shaftEnd - 4, spearY * 0.3 + 3);
+  ctx.lineTo(shaftEnd - 1, spearY * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Hands holding spear
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.1 + thrust * 0.5, spearY, 2, 0, Math.PI * 2);
+  ctx.arc(r * 0.5 + thrust * 0.8, spearY * 0.6, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pierce wind swoosh on attack
+  if (isAttacking) {
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(shaftEnd - 2, spearY * 0.3 - 5);
+    ctx.lineTo(shaftEnd + 10, spearY * 0.3);
+    ctx.lineTo(shaftEnd - 2, spearY * 0.3 + 5);
+    ctx.stroke();
+  }
+}
+
+function drawBillieJean(ctx, entity, time, flash) {
+  const r = entity.r;
+  const isAttacking = time < entity.swingUntil;
+  const skinColor = flash ? "#ffffff" : "#ffe4c4";
+  const armorColor = flash ? "#fff6d8" : entity.color;
+  const darkColor = flash ? "#ffffff" : entity.accent;
+
+  // Flowing golden hair (-X)
+  if (!flash) {
+    ctx.fillStyle = "#eab308";
+    ctx.beginPath();
+    ctx.arc(-r * 0.3, -r * 0.4, 3, 0, Math.PI * 2);
+    ctx.arc(-r * 0.3, r * 0.4, 3, 0, Math.PI * 2);
+    ctx.arc(-r * 0.6, 0, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Paladin Armor / Breastplate
+  ctx.fillStyle = armorColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.95, r * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // White Holy Crest / Cross on chest
+  ctx.fillStyle = flash ? "#ffffff" : "#fef08a";
+  ctx.fillRect(-r * 0.3, -2, r * 0.6, 4);
+  ctx.fillRect(-1.5, -r * 0.45, 3, r * 0.9);
+
+  // Left hand: Holy Aegis / Healing Relic (-Y)
+  const relicGlow = 0.5 + Math.sin(time * 0.008) * 0.4;
+  ctx.fillStyle = flash ? "#ffffff" : `rgba(254, 240, 138, ${relicGlow})`;
+  ctx.beginPath();
+  ctx.arc(r * 0.2, -r * 0.8, 3.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = flash ? "#ffffff" : "#fef9c3";
+  ctx.beginPath();
+  ctx.arc(r * 0.2, -r * 0.8, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(r * 0.22, 0, r * 0.58, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Winged Guardian Helm / Circlet
+  ctx.strokeStyle = armorColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(r * 0.15, 0, r * 0.6, -1.1, 1.1);
+  ctx.stroke();
+
+  // Wing ornaments on helm sides
+  ctx.fillStyle = flash ? "#ffffff" : "#fef08a";
+  ctx.beginPath();
+  ctx.moveTo(0, -r * 0.6);
+  ctx.lineTo(-r * 0.4, -r * 1.1);
+  ctx.lineTo(r * 0.3, -r * 0.7);
+  ctx.moveTo(0, r * 0.6);
+  ctx.lineTo(-r * 0.4, r * 1.1);
+  ctx.lineTo(r * 0.3, r * 0.7);
+  ctx.fill();
+
+  // Eyes
+  drawHeroEyes(ctx, r, flash);
+
+  // Heavy Warhammer (+Y)
+  ctx.save();
+  const hammerHandX = r * 0.3;
+  const hammerHandY = r * 0.8;
+  ctx.translate(hammerHandX, hammerHandY);
+
+  let hammerAngle = 0.2;
+  if (isAttacking) {
+    hammerAngle = -0.8 + Math.sin(time * 0.035) * 0.7;
+  }
+  ctx.rotate(hammerAngle);
+
+  // Hammer shaft
+  ctx.strokeStyle = flash ? "#ffffff" : "#78350f";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(-4, 0);
+  ctx.lineTo(12, 0);
+  ctx.stroke();
+
+  // Heavy steel hammer head
+  ctx.fillStyle = flash ? "#ffffff" : "#94a3b8";
+  ctx.strokeStyle = flash ? "#ffffff" : "#ca8a04";
+  ctx.lineWidth = 1.2;
+  ctx.fillRect(8, -5, 6, 10);
+  ctx.strokeRect(8, -5, 6, 10);
+
+  ctx.restore();
+
+  // Hand node
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(hammerHandX, hammerHandY, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden smash impact arc
+  if (isAttacking) {
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 11, -0.7, 0.7);
+    ctx.stroke();
+  }
+}
+
 function drawCreature(ctx, camera, entity, time) {
   if (entity.hp <= 0) return;
   const p = worldToScreen(camera, entity.x, entity.y);
@@ -128,38 +598,57 @@ function drawCreature(ctx, camera, entity, time) {
   const hover = entity.hover ? Math.sin(time / 180) * 3 : 0;
   const bodyY = p.y - hover;
 
+  // Ground shadow
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.beginPath();
   ctx.ellipse(p.x, p.y + entity.r * 0.7, entity.r * 0.9, entity.r * 0.35, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = flash ? "#fff6d8" : entity.color;
-  ctx.beginPath();
-  ctx.ellipse(p.x, bodyY, entity.r * 0.95, entity.r * 1.05, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const ang = Math.atan2(entity.facing.y, entity.facing.x);
+  ctx.save();
+  ctx.translate(p.x, bodyY);
+  ctx.rotate(ang);
 
-  ctx.fillStyle = flash ? "#fff" : entity.accent;
-  ctx.beginPath();
-  ctx.arc(p.x + entity.facing.x * 2, bodyY - entity.r * 0.55, entity.r * 0.55, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (entity.kind === "hero") {
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+  if (entity.kind === "monster") {
+    if (entity.id === "mossCrawler") {
+      drawMossCrawler(ctx, entity, time, flash);
+    } else if (entity.id === "fanglet") {
+      drawFanglet(ctx, entity, time, flash);
+    } else if (entity.id === "skyGnat") {
+      drawSkyGnat(ctx, entity, time, flash);
+    } else {
+      ctx.fillStyle = flash ? "#fff6d8" : entity.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, entity.r * 0.95, entity.r * 1.05, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    // Hero outline ring
+    ctx.strokeStyle = flash ? "#ffffff" : "rgba(255, 255, 255, 0.45)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(p.x, bodyY, entity.r + 1.5, 0, Math.PI * 2);
+    ctx.arc(0, 0, entity.r + 1.5, 0, Math.PI * 2);
     ctx.stroke();
+
+    if (entity.id === "cody") {
+      drawCody(ctx, entity, time, flash);
+    } else if (entity.id === "zack") {
+      drawZack(ctx, entity, time, flash);
+    } else if (entity.id === "justin") {
+      drawJustin(ctx, entity, time, flash);
+    } else if (entity.id === "billieJean") {
+      drawBillieJean(ctx, entity, time, flash);
+    } else {
+      ctx.fillStyle = flash ? "#fff6d8" : entity.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, entity.r * 0.95, entity.r * 1.05, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  if (time < entity.swingUntil) {
-    ctx.strokeStyle = entity.kind === "hero" ? "#f4ead0" : "#c45c4a";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    const ang = Math.atan2(entity.facing.y, entity.facing.x);
-    ctx.arc(p.x, bodyY, entity.r + entity.attackRange * 0.55, ang - 0.9, ang + 0.9);
-    ctx.stroke();
-  }
+  ctx.restore();
 
+  // Health bar
   const ratio = entity.hp / entity.maxHp;
   ctx.fillStyle = "rgba(0,0,0,0.45)";
   roundRect(ctx, p.x - 12, bodyY - entity.r - 12, 24, 4, 2);
@@ -169,14 +658,121 @@ function drawCreature(ctx, camera, entity, time) {
   ctx.fill();
 }
 
-export function drawEntities(ctx, camera, heroes, monsters, time) {
-  const all = [...heroes, ...monsters].sort((a, b) => a.y - b.y);
-  for (const entity of all) drawCreature(ctx, camera, entity, time);
+function drawChest(ctx, camera, chest, time) {
+  const p = worldToScreen(camera, chest.x, chest.y);
+  if (p.x < -30 || p.x > camera.w + 30 || p.y < -30 || p.y > camera.h + 30) return;
+
+  // Ground shadow
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + 7, 12, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!chest.opened) {
+    // Closed Chest
+    // Base wood box
+    ctx.fillStyle = "#854d0e";
+    roundRect(ctx, p.x - 11, p.y - 7, 22, 14, 2);
+    ctx.fill();
+
+    // Wood highlight
+    ctx.fillStyle = "#a16207";
+    ctx.fillRect(p.x - 9, p.y - 5, 18, 4);
+
+    // Iron reinforcing bands
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(p.x - 9, p.y - 7, 3, 14);
+    ctx.fillRect(p.x + 6, p.y - 7, 3, 14);
+    ctx.fillRect(p.x - 11, p.y - 1, 22, 2);
+
+    // Golden lock & latch
+    ctx.fillStyle = "#f59e0b";
+    roundRect(ctx, p.x - 3, p.y - 2, 6, 6, 1);
+    ctx.fill();
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y + 1, 1, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Open Chest
+    // Open lid tilted back
+    ctx.fillStyle = "#713f12";
+    roundRect(ctx, p.x - 11, p.y - 14, 22, 7, 2);
+    ctx.fill();
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(p.x - 9, p.y - 14, 3, 7);
+    ctx.fillRect(p.x + 6, p.y - 14, 3, 7);
+
+    // Deep chest interior
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(p.x - 9, p.y - 7, 18, 5);
+
+    // Chest front wall
+    ctx.fillStyle = "#854d0e";
+    roundRect(ctx, p.x - 11, p.y - 2, 22, 9, 2);
+    ctx.fill();
+
+    // Corner bands
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(p.x - 9, p.y - 2, 3, 9);
+    ctx.fillRect(p.x + 6, p.y - 2, 3, 9);
+
+    // Golden hinge latch
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(p.x - 2.5, p.y - 2, 5, 3);
+
+    // Ascending golden sparkle particles
+    if (chest.sparkles) {
+      for (const s of chest.sparkles) {
+        const cycle = ((time * 0.0012 * s.speed + s.phase) % 1);
+        const sparkY = p.y - 4 - cycle * 20;
+        const sparkAlpha = Math.sin(cycle * Math.PI) * 0.85;
+        ctx.fillStyle = `rgba(253, 224, 71, ${sparkAlpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x + s.ox, sparkY, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Floating discovery badge if recently opened
+  if (chest.opened && chest.openedAt && time - chest.openedAt < 3500) {
+    const elapsed = (time - chest.openedAt) / 1000;
+    const popY = Math.min(22, elapsed * 18);
+    const popAlpha = elapsed < 2.3 ? 1 : Math.max(0, 1 - (elapsed - 2.3) * 0.85);
+
+    ctx.save();
+    ctx.globalAlpha = popAlpha;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+    roundRect(ctx, p.x - 52, p.y - 30 - popY, 104, 20, 4);
+    ctx.fill();
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${chest.loot.icon} ${chest.loot.name}`, p.x, p.y - 20 - popY);
+    ctx.restore();
+  }
 }
 
-export function updateHud(heroes) {
+export function drawEntities(ctx, camera, heroes, monsters, chests, time) {
+  const all = [...(chests || []), ...heroes, ...monsters].sort((a, b) => a.y - b.y);
+  for (const entity of all) {
+    if (entity.loot) {
+      drawChest(ctx, camera, entity, time);
+    } else {
+      drawCreature(ctx, camera, entity, time);
+    }
+  }
+}
+
+export function updateHud(heroes, chests) {
   const root = document.getElementById("party-hud");
-  root.innerHTML = heroes
+  const heroHtml = heroes
     .map((hero) => {
       const pct = Math.max(0, (hero.hp / hero.maxHp) * 100);
       return `<div class="hero-row">
@@ -188,6 +784,14 @@ export function updateHud(heroes) {
       </div>`;
     })
     .join("");
+
+  let chestHtml = "";
+  if (chests && chests.length > 0) {
+    const opened = chests.filter((c) => c.opened).length;
+    chestHtml = `<div class="chest-hud">🎁 Chests: ${opened} / ${chests.length}</div>`;
+  }
+
+  root.innerHTML = heroHtml + chestHtml;
 }
 
 export function setBanner(text) {
