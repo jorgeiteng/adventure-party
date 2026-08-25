@@ -86,7 +86,7 @@ function switchToCavern(game) {
   game.monsters = game.cavernMonsters;
   const spawnPx = {
     x: game.world.spawn.tx * TILE + TILE / 2,
-    y: game.world.spawn.ty * TILE + TILE / 2,
+    y: game.world.spawn.ty * TILE + TILE / 2 + TILE * 3,
   };
   for (const hero of game.heroes) {
     hero.x = spawnPx.x;
@@ -125,13 +125,8 @@ export function updateGame(game, input, now, dt) {
 
   updateHud(game.heroes, game.chests, game.hasMedal);
 
-  // --- Shrine puzzle state machine ---
-  const shrine = shrineCenter(game.world);
   const leader = game.heroes[0];
-  const distToShrine = Math.hypot(leader.x - shrine.x, leader.y - shrine.y);
-  const nearShrineRadius = 48;
   const wasNearShrine = game.nearShrine;
-  game.nearShrine = distToShrine < nearShrineRadius;
 
   const nearbyNpc = getNearbyNpc(game.npcs, leader);
   if (nearbyNpc && game.shrineState === "completed") {
@@ -146,70 +141,49 @@ export function updateGame(game, input, now, dt) {
     game.currentNpc = null;
   }
 
-  if (game.shrineState === "idle") {
-    if (game.nearShrine && !game.shrineTriggered) {
-      game.shrineTriggered = true;
-      game.shrineState = "defense";
-      sound.playShrine();
-      spawnWaveMonsters(game);
-      game.bannerText = "Defend the shrine!";
-      game.bannerUntil = now + 3000;
-    }
-  } else if (game.shrineState === "defense") {
-    const allDead = game.shrineWave.every((m) => m.hp <= 0);
-    if (allDead) {
-      game.shrineWave = [];
-      game.shrineState = "boss";
-      sound.playBossSpawn();
-      spawnBoss(game);
-      game.bannerText = "A Lynel emerges!";
-      game.bannerUntil = now + 2500;
-    }
-  } else if (game.shrineState === "boss") {
-    if (game.shrineBoss && game.shrineBoss.hp <= 0) {
-      game.shrineBoss = null;
-      game.shrineState = "completed";
-      game.hasMedal = true;
-      sound.playVictory();
-      healParty(game.heroes);
-      const dest = zorasDomainCenter(game.world);
-      for (const hero of game.heroes) {
-        hero.x = dest.x;
-        hero.y = dest.y;
+  if (game.currentMap === "overworld") {
+    const shrine = shrineCenter(game.world);
+    const distToShrine = Math.hypot(leader.x - shrine.x, leader.y - shrine.y);
+    const nearShrineRadius = 48;
+    game.nearShrine = distToShrine < nearShrineRadius;
+
+    if (game.shrineState === "idle") {
+      if (game.nearShrine && !game.shrineTriggered) {
+        game.shrineTriggered = true;
+        game.shrineState = "defense";
+        sound.playShrine();
+        spawnWaveMonsters(game);
+        game.bannerText = "Defend the shrine!";
+        game.bannerUntil = now + 3000;
       }
-      game.bannerText = "The shrine is sealed. Medal earned! Teleported to Zora's Domain!";
-      game.bannerUntil = now + 6000;
+    } else if (game.shrineState === "defense") {
+      const allDead = game.shrineWave.every((m) => m.hp <= 0);
+      if (allDead) {
+        game.shrineWave = [];
+        game.shrineState = "boss";
+        sound.playBossSpawn();
+        spawnBoss(game);
+        game.bannerText = "A Lynel emerges!";
+        game.bannerUntil = now + 2500;
+      }
+    } else if (game.shrineState === "boss") {
+      if (game.shrineBoss && game.shrineBoss.hp <= 0) {
+        game.shrineBoss = null;
+        game.shrineState = "completed";
+        game.hasMedal = true;
+        sound.playVictory();
+        healParty(game.heroes);
+        const dest = zorasDomainCenter(game.world);
+        for (const hero of game.heroes) {
+          hero.x = dest.x;
+          hero.y = dest.y;
+        }
+        game.bannerText = "The shrine is sealed. Medal earned! Teleported to Zora's Domain!";
+        game.bannerUntil = now + 6000;
+      }
     }
-  }
-
-  // Banner display
-  if (game.shrineState === "defense") {
-    const alive = game.shrineWave.filter((m) => m.hp > 0).length;
-    setBanner(`Defend the shrine! Enemies remaining: ${alive}`);
-  } else if (game.shrineState === "boss" && game.shrineBoss && game.shrineBoss.hp > 0) {
-    setBanner("A Lynel emerges! Defeat it!");
-  } else if (game.currentMap === "cavern" && game.cavernBossState === "boss" && game.cavernBoss && game.cavernBoss.hp > 0) {
-    setBanner("Aquamentus lurks in the depths!");
-  } else if (game.currentNpc) {
-    setBanner(`${game.currentNpc.name}: "${game.currentNpc.dialogue[game.currentNpc.currentLine]}"`);
-  } else if (game.bannerUntil && now < game.bannerUntil) {
-    setBanner(game.bannerText);
-  } else if (game.shrineState === "idle" && game.nearShrine) {
-    if (!wasNearShrine) {
-      sound.playShrine();
-    }
-    setBanner("The sealed shrine awaits...");
-  } else if (game.nearPortal && game.hasMedal) {
-    setBanner("Press SPACE to enter the portal");
   } else {
-    setBanner("");
-  }
-
-  if (game.heroes[0].hp <= 0 && !game.wiped) {
-    game.wiped = true;
-    sound.playWipe();
-    setWipe(true);
-    setBanner("");
+    game.nearShrine = false;
   }
 
   if (game.currentMap === "cavern" && game.hasMedal) {
@@ -226,9 +200,7 @@ export function updateGame(game, input, now, dt) {
       setBanner("Returned to Zora's Domain");
       game.bannerUntil = now + 3000;
     }
-  }
-
-  if (game.currentMap === "overworld" && game.hasMedal) {
+  } else if (game.currentMap === "overworld" && game.hasMedal) {
     const portalPos = {
       x: game.world.zorasDomain.tx * TILE + TILE / 2 + 64,
       y: game.world.zorasDomain.ty * TILE + TILE / 2,
@@ -242,6 +214,8 @@ export function updateGame(game, input, now, dt) {
       setBanner("Entered Zora's Cavern");
       game.bannerUntil = now + 3000;
     }
+  } else {
+    game.nearPortal = false;
   }
 
   if (game.portalCooldown && now > game.portalCooldown) {
@@ -272,5 +246,34 @@ export function updateGame(game, input, now, dt) {
       setBanner("Aquamentus defeated! The cavern is cleared!");
       game.bannerUntil = now + 5000;
     }
+  }
+
+  if (game.shrineState === "defense") {
+    const alive = game.shrineWave.filter((m) => m.hp > 0).length;
+    setBanner(`Defend the shrine! Enemies remaining: ${alive}`);
+  } else if (game.shrineState === "boss" && game.shrineBoss && game.shrineBoss.hp > 0) {
+    setBanner("A Lynel emerges! Defeat it!");
+  } else if (game.currentMap === "cavern" && game.cavernBossState === "boss" && game.cavernBoss && game.cavernBoss.hp > 0) {
+    setBanner("Aquamentus lurks in the depths!");
+  } else if (game.currentNpc) {
+    setBanner(`${game.currentNpc.name}: "${game.currentNpc.dialogue[game.currentNpc.currentLine]}"`);
+  } else if (game.bannerUntil && now < game.bannerUntil) {
+    setBanner(game.bannerText);
+  } else if (game.shrineState === "idle" && game.nearShrine) {
+    if (!wasNearShrine) {
+      sound.playShrine();
+    }
+    setBanner("The sealed shrine awaits...");
+  } else if (game.nearPortal && game.hasMedal) {
+    setBanner("Step into the portal to travel");
+  } else {
+    setBanner("");
+  }
+
+  if (game.heroes[0].hp <= 0 && !game.wiped) {
+    game.wiped = true;
+    sound.playWipe();
+    setWipe(true);
+    setBanner("");
   }
 }
