@@ -73,7 +73,7 @@ The Lynel spawns during the shrine defense boss phase. It does not respawn.
 | Attack Range | 28 |
 | Aggro Range | 350 |
 
-The Aquamentus is the cavern boss (encounter not yet fully implemented in this build).
+The Aquamentus is the cavern's final boss. It spawns when the leader enters the boss room (tile (32, 12), within 120px), does not respawn, and is the last encounter in the game.
 
 ### Monster AI
 
@@ -148,6 +148,15 @@ When the leader approaches the shrine:
 - **Boss Room**: tile (32, 12) — north
 - **Tile types**: Cavern Floor, Cavern Wall, Cavern Water, Portal
 - Accessible after defeating the Lynel via a portal at Zora's Domain
+
+## Game Complete
+
+After defeating the Aquamentus in the cavern:
+
+1. A shrine relic appears where the boss fell
+2. Walk into the relic to collect it — the party is fully healed
+3. The "Adventure Complete!" screen appears
+4. Press **R** to play again (full reset)
 
 ## Game Over
 

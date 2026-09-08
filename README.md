@@ -15,7 +15,8 @@ From this folder (PowerShell):
 Or with Python:
 
 ```bash
-python -m http.server 8080
+python3 serve.py
+# or: python -m http.server 8080
 ```
 
 Then open [http://localhost:8080](http://localhost:8080).
@@ -24,7 +25,14 @@ Then open [http://localhost:8080](http://localhost:8080).
 
 - **WASD** or **arrow keys** — move the leader
 - **Space** or **click** — melee strike
-- **R** — restart after a party wipe
+- **R** — restart after a party wipe or on the completion screen
 - **M** — toggle sound / mute (or click the 🔊 / 🔇 icon in HUD)
 
-Walk to the sealed shrine in the northeast for a Phase 2 teaser. The final boss is not in this build.
+## The Adventure
+
+1. Defend the sealed shrine in the northeast, then defeat the **Lynel**
+2. Earn the Shrine Medal — the party is healed and travels to Zora's Domain
+3. Talk to the villagers, then take the portal into **Zora's Cavern**
+4. Slay **Aquamentus** in the depths and collect its relic to complete the adventure
+
+Treasure chests scattered across the overworld grant permanent party upgrades.

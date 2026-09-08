@@ -16,7 +16,6 @@ Browser game: vanilla JS ES modules + Canvas 2D + Web Audio. Single page, no fra
 ## Gotchas
 
 - Every JS→JS import carries a `?v=5` cache-buster (`import ... from "./world.js?v=5"`), matching the `<script>` tag in `index.html`. When adding imports, keep `?v=5`; when bumping the version, bump it everywhere at once — `test.py` fails if any import has a `?v=` other than 5.
-- `README.md` is stale: it claims there is no final boss, but the code includes the cavern, the Aquamentus boss, portal map transitions, and a game-complete flow. Trust `tests/test.py` and `js/game.js` over the README.
 - World generation is deterministic (seeded Mulberry32 PRNG in `js/world.js`); changing the seed or generation order reshapes the whole map.
 - `window.__hp` (`{ game, input, camera }`) is exposed in `js/main.js` for browser-console debugging.
 
