@@ -4,18 +4,18 @@ Browser game: vanilla JS ES modules + Canvas 2D + Web Audio. Single page, no fra
 
 ## No build tooling
 
-- There is no `package.json`, no npm/node toolchain, no bundler, no linter, no typecheck. Do not run `npm install` or look for build scripts.
+- There is no `package.json`, npm/node toolchain, bundler, linter, or typecheck. Do not run `npm install` or look for build scripts.
 - All art and audio are procedural (Canvas 2D draw functions in `js/render.js`, synthesized Web Audio in `js/audio.js`). There are no image/sound asset files.
 
 ## Commands
 
-- Serve (required — ES modules fail under `file://`): `python3 serve.py` (port 8080, optional port arg). Then open http://localhost:8080.
-- Verify: `python3 tests/test.py` — the only automated check (~235 regex-based smoke assertions: brace balance, import/export consistency, game-state invariants, CSS selectors). Run after every change.
+- Serve (required — ES modules fail under `file://`): `python3 serve.py` (port 8080, optional port arg), or `./serve.ps1` on Windows. Then open http://localhost:8080.
+- Verify: `python3 tests/test.py` — the only automated check (regex/structural smoke assertions for brace balance, imports/exports, game-state invariants, and CSS selectors). Run after every change.
 - No CI exists. Beyond test.py, verification is manual: load the game in a browser and check the console for errors.
 
 ## Gotchas
 
-- Every JS→JS import carries a `?v=5` cache-buster (`import ... from "./world.js?v=5"`), matching the `<script>` tag in `index.html`. When adding imports, keep `?v=5`; when bumping the version, bump it everywhere at once — `test.py` fails if any import has a `?v=` other than 5.
+- Every JS→JS import carries the `?v=5` cache-buster (`import ... from "./world.js?v=5"`), matching the module script in `index.html`. Keep `?v=5` on new imports; `test.py` fails if an import uses another query version.
 - World generation is deterministic (seeded Mulberry32 PRNG in `js/world.js`); changing the seed or generation order reshapes the whole map.
 - `window.__hp` (`{ game, input, camera }`) is exposed in `js/main.js` for browser-console debugging.
 
