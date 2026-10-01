@@ -41,7 +41,7 @@ Treasure chests scattered across the overworld grant permanent party upgrades.
 
 ## Why this repo exists
 
-This project was built as a way to teach software fundamentals through something worth playing. It is deliberately small (≈4k lines, no build step, no dependencies), so the whole thing is readable in one sitting — and every concept below exists in real, working code rather than in a textbook example.
+**Adventure Party** began as a vacation/weekend project with my 10-year-old son, a big Zelda fan who wanted to understand how a video game is actually made. He had just started coding classes, and I taught him to use AI coding tools as a learning partner — asking good questions, reading the suggestions, and iterating until the game did what he pictured. The goal was to teach software fundamentals through something worth playing: the project is deliberately small (≈4k lines, no build step, no dependencies), so the whole thing is readable in one sitting — and every concept below exists in real, working code rather than in a textbook example.
 
 | Fundamental concept | Where it lives |
 |---|---|
