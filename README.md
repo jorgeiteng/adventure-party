@@ -4,6 +4,21 @@ A Zelda-inspired overworld in the browser: you lead one hero while three compani
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## Why this repo exists
+
+**Adventure Party** began as a vacation/weekend project with my 10-year-old son, a big Zelda fan who wanted to understand how a video game is actually made. He had just started coding classes, and I taught him to use AI coding tools as a learning partner — asking good questions, reading the suggestions, and iterating until the game did what he pictured. The goal was to teach software fundamentals through something worth playing: the project is deliberately small (≈4k lines, no build step, no dependencies), so the whole thing is readable in one sitting — and every concept below exists in real, working code rather than in a textbook example.
+
+| Fundamental concept | Where it lives |
+|---|---|
+| Game loop and frame timing | `js/main.js` (rAF loop), `js/game.js` (`updateGame`) |
+| Finite state machines | Shrine/boss flow — see `docs/architecture.md` |
+| Deterministic randomness (seeded PRNG) | Mulberry32 in `js/world.js` |
+| Data-driven design ("specs", not hardcoded behavior) | Recipes in `docs/contributing.md`, specs in `js/monster.js` |
+| Modular code without a bundler | ES modules + `?v=5` cache-busting |
+| Procedural generation and audio synthesis | `js/render.js`, `js/audio.js` |
+| Testing without a framework | `tests/test.py` — 235 assertions |
+| Writing documentation before code | `docs/` (architecture, technical, gameplay, contributing) |
+
 ## Play
 
 This uses ES modules, so a local static server is more reliable than opening `index.html` as a file.
@@ -38,21 +53,6 @@ Then open [http://localhost:8080](http://localhost:8080).
 4. Slay **Aquamentus** in the depths and collect its relic to complete the adventure
 
 Treasure chests scattered across the overworld grant permanent party upgrades.
-
-## Why this repo exists
-
-**Adventure Party** began as a vacation/weekend project with my 10-year-old son, a big Zelda fan who wanted to understand how a video game is actually made. He had just started coding classes, and I taught him to use AI coding tools as a learning partner — asking good questions, reading the suggestions, and iterating until the game did what he pictured. The goal was to teach software fundamentals through something worth playing: the project is deliberately small (≈4k lines, no build step, no dependencies), so the whole thing is readable in one sitting — and every concept below exists in real, working code rather than in a textbook example.
-
-| Fundamental concept | Where it lives |
-|---|---|
-| Game loop and frame timing | `js/main.js` (rAF loop), `js/game.js` (`updateGame`) |
-| Finite state machines | Shrine/boss flow — see `docs/architecture.md` |
-| Deterministic randomness (seeded PRNG) | Mulberry32 in `js/world.js` |
-| Data-driven design ("specs", not hardcoded behavior) | Recipes in `docs/contributing.md`, specs in `js/monster.js` |
-| Modular code without a bundler | ES modules + `?v=5` cache-busting |
-| Procedural generation and audio synthesis | `js/render.js`, `js/audio.js` |
-| Testing without a framework | `tests/test.py` — 235 assertions |
-| Writing documentation before code | `docs/` (architecture, technical, gameplay, contributing) |
 
 ### How the project is run
 
