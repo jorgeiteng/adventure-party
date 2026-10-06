@@ -13,6 +13,7 @@ All art and sound are generated procedurally — no external image or audio asse
 | [Gameplay](gameplay.md) | Controls, characters, monsters, loot, and shrine puzzle |
 | [Technical Details](technical.md) | Rendering, audio, world generation, and combat internals |
 | [Contributing](contributing.md) | Code conventions and how to extend the project |
+| [Backlog](backlog.md) | Planned work: Spec-Driven Development and other open items |
 
 ## Quick Start
 
