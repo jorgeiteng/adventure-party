@@ -1,35 +1,33 @@
 # Plan: BL-0 — Difficulty Modes on Welcome Screen (Easy / Medium / Hard)
 
-**Status**: Planned · **Size**: Medium · **Requested by**: JJ
-
----
+**Status**: Ready to implement · **Size**: Medium · **Requested by**: JJ
+**Decisions locked**: R restarts with the **same** difficulty (no welcome re-show) · bosses scale with the same multipliers · no `localStorage` (future idea) · version → `0.15`
 
 ## Goal
-Add an **Easy / Medium / Hard** selection to the welcome screen (`#welcome`) that meaningfully changes game balance. Medium = current v0.14 balance.
 
----
+Add an **Easy / Medium / Hard** choice to the welcome screen (`#welcome`) that meaningfully changes balance. **Medium is bit-for-bit identical to v0.14.**
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `index.html` | Add three difficulty buttons inside `#welcome` |
-| `css/style.css` | Style button group (hover/active/selected) |
-| `js/main.js` | Capture selection, pass to `createGame(difficulty)` |
-| `js/game.js` | Store `difficulty` in state; compute multipliers; pass to spawners |
-| `js/hero.js` | `spawnParty(mult)` applies hero multipliers |
-| `js/monster.js` | `spawnMonsters(world, count, mult)` applies monster multipliers |
-| `docs/gameplay.md` | Document the three modes |
-| `js/main.js` | Bump `VERSION = "0.15"` |
-| `docs/README.md` | Update `Current: 0.15` |
-| `tests/test.py` | Add new button IDs + CSS selector assertions |
+| File | Change |
+|---|---|
+| `index.html:29-33` | Difficulty button group inside `#welcome` |
+| `css/style.css` (~after `#welcome` rules, ~line 266) | Button group styles |
+| `js/main.js:6,12,20-28` | `VERSION = "0.15"`; import `resetGame`; selection logic + event guards |
+| `js/game.js:14-24,83,145,163,175,364` | `DIFFICULTY` table; `resetGame(difficulty)`; boss/portal/restart call sites |
+| `js/hero.js:79` | `spawnParty(world, mult)` |
+| `js/monster.js:145,165` + new helper | `spawnMonsters(world, mult, count)`; `scaleMonster()`; respawn timing |
+| `docs/gameplay.md` | New "Difficulty Modes" section |
+| `docs/README.md:34`, `README.md:54,59,83` | Version → `0.15`; assertion count |
+| `docs/backlog.md` | Close **BL-1** (superseded by this bump) |
+| `tests/test.py:61,189,345` | New id/state/CSS assertions |
 
----
+No new JS modules → no new imports → no `?v=` changes (test-enforced).
 
-## Difficulty Multipliers (Proposed)
+## Difficulty Multipliers
 
-| Stat | Easy | Medium (base) | Hard |
-|------|------|---------------|------|
+| Stat | Easy | Medium | Hard |
+|---|---|---|---|
 | Hero maxHp | ×1.25 | ×1.0 | ×0.8 |
 | Hero damage | ×1.2 | ×1.0 | ×0.85 |
 | Hero speed | ×1.1 | ×1.0 | ×0.9 |
@@ -39,211 +37,170 @@ Add an **Easy / Medium / Hard** selection to the welcome screen (`#welcome`) tha
 | Monster speed | ×0.85 | ×1.0 | ×1.15 |
 | Monster aggro | ×0.8 | ×1.0 | ×1.2 |
 | Monster attackCooldown | ×1.2 | ×1.0 | ×0.8 |
-| Respawn time | ×1.5 | ×1.0 | ×0.7 |
-| Shrine wave count | 4 | 6 | 8 |
+| Respawn delay | ×1.5 | ×1.0 | ×0.7 |
 
-Medium matches current values exactly (×1.0).
-
----
+Removed from the original draft: **"Shrine wave count"** — `spawnWaveMonsters` (`game.js:66`) is dead code, never called (shrine flow = rune puzzle → boss). Leave the function untouched: `test.py:207` requires it to exist. Consequence: `docs/gameplay.md:114-118` ("Phase 1: Defense") is already stale — noted, out of scope for BL-0.
 
 ## Implementation Steps
 
 ### 1. UI — `index.html` + `css/style.css`
 
-Add inside `#welcome` (after `<h1>` and tagline):
-
 ```html
-<div id="difficulty-select" role="radiogroup" aria-label="Difficulty">
-  <button type="button" data-diff="easy" title="Easier enemies, stronger heroes">Easy</button>
-  <button type="button" data-diff="medium" class="selected" title="Standard balance">Medium</button>
-  <button type="button" data-diff="hard" title="Tougher enemies, weaker heroes">Hard</button>
+<div id="difficulty-select" role="group" aria-label="Difficulty">
+  <button type="button" id="diff-easy" data-diff="easy">Easy</button>
+  <button type="button" id="diff-medium" data-diff="medium" class="selected">Medium</button>
+  <button type="button" id="diff-hard" data-diff="hard">Hard</button>
 </div>
-<p class="welcome-hint">Click a difficulty, then press any key to start</p>
+<p class="welcome-hint">Pick a difficulty, then click or press any key to start</p>
 ```
 
-CSS (`css/style.css`, near `#welcome` rules):
+Ids **and** `data-diff`: ids satisfy `test.py:61` (which checks `id="..."`), `data-diff` drives the logic. CSS: `#difficulty-select` inline-flex, gap 8px; buttons outlined; `.selected` filled gold (`#fef08a` on `#080c0a`), matching the `#welcome h1` palette.
 
-```css
-#difficulty-select {
-  display: inline-flex;
-  gap: 8px;
-  margin: 16px 0;
-}
-#difficulty-select button {
-  padding: 8px 18px;
-  font-size: 15px;
-  font-family: inherit;
-  background: rgba(244, 234, 208, 0.12);
-  border: 2px solid rgba(244, 234, 208, 0.3);
-  color: #f4ead0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-#difficulty-select button:hover {
-  background: rgba(244, 234, 208, 0.25);
-  border-color: #f4ead0;
-}
-#difficulty-select button.selected {
-  background: #fef08a;
-  color: #080c0a;
-  border-color: #d4af37;
-}
-```
+### 2. Selection + dismissal — `js/main.js` (blocker fix)
 
-### 2. Selection Logic — `js/main.js`
+The risk: `dismissWelcome` is bound to welcome **click**, window **mousedown**, and window **keydown** (`main.js:26-28`), so a click on a button would dismiss the welcome *before* selection registers. Fix by stopping group events from reaching those listeners:
 
 ```js
-// top of file
 let selectedDifficulty = "medium";
+const diffGroup = document.getElementById("difficulty-select");
 
-// inside DOMContentLoaded
-const diffButtons = document.querySelectorAll("#difficulty-select button");
-diffButtons.forEach((btn) => {
+diffGroup.addEventListener("mousedown", (e) => e.stopPropagation());
+diffGroup.addEventListener("click", (e) => e.stopPropagation());      // button handler still runs first
+diffGroup.addEventListener("keydown", (e) => {                        // Enter/Space activate the button…
+  if (e.key === "Enter" || e.key === " ") e.stopPropagation();        // …without starting the game
+});
+diffGroup.querySelectorAll("button").forEach((btn) => {
   btn.addEventListener("click", () => {
     selectedDifficulty = btn.dataset.diff;
-    diffButtons.forEach((b) => b.classList.toggle("selected", b === btn));
+    diffGroup.querySelectorAll("button").forEach((b) => b.classList.toggle("selected", b === btn));
+    btn.blur();   // focus returns to body → next plain keypress starts the game
   });
 });
 
-// modify dismissWelcome
-function dismissWelcome() {
+function dismissWelcome(e) {
+  if (started) return;
+  started = true;
   welcomeEl.style.display = "none";
-  const game = createGame(selectedDifficulty);
-  startLoop(game);
+  Object.assign(game, resetGame(selectedDifficulty));
 }
 ```
 
-Keep "any key" working — it uses current `selectedDifficulty` (defaults to Medium).
+Also: `import { createGame, updateGame, resetGame } from "./game.js?v=5"`.
 
-### 3. Game State — `js/game.js`
+Why `Object.assign(game, ...)`: `game` is a module-level `const` referenced by the rAF loop and `window.__hp` (`main.js:13`) — re-assigning would stale both. `Object.assign` mirrors the existing restart pattern (`game.js:175-176`). No `startLoop()`/`DOMContentLoaded` (neither exists — the first draft's error).
+
+### 3. Difficulty table — `js/game.js`
 
 ```js
-// near top
 const DIFFICULTY = {
   easy:   { heroHp: 1.25, heroDmg: 1.2, heroSpeed: 1.1, heroHeal: 1.3,
-            monHp: 0.75, monDmg: 0.7, monSpeed: 0.85, monAggro: 0.8,
-            monCd: 1.2, respawn: 1.5, shrineWaves: 4 },
-  medium: { heroHp: 1.0,  heroDmg: 1.0, heroSpeed: 1.0, heroHeal: 1.0,
-            monHp: 1.0,   monDmg: 1.0, monSpeed: 1.0,  monAggro: 1.0,
-            monCd: 1.0,   respawn: 1.0, shrineWaves: 6 },
-  hard:   { heroHp: 0.8,  heroDmg: 0.85, heroSpeed: 0.9, heroHeal: 0.7,
-            monHp: 1.3,   monDmg: 1.25,  monSpeed: 1.15, monAggro: 1.2,
-            monCd: 0.8,   respawn: 0.7,  shrineWaves: 8 },
+            monHp: 0.75, monDmg: 0.7, monSpeed: 0.85, monAggro: 0.8, monCd: 1.2, respawn: 1.5 },
+  medium: { heroHp: 1, heroDmg: 1, heroSpeed: 1, heroHeal: 1,
+            monHp: 1, monDmg: 1, monSpeed: 1, monAggro: 1, monCd: 1, respawn: 1 },
+  hard:   { heroHp: 0.8, heroDmg: 0.85, heroSpeed: 0.9, heroHeal: 0.7,
+            monHp: 1.3, monDmg: 1.25, monSpeed: 1.15, monAggro: 1.2, monCd: 0.8, respawn: 0.7 },
 };
 
-export function createGame(difficulty = "medium") {
-  const mult = DIFFICULTY[difficulty] || DIFFICULTY.medium;
-  const game = {
-    // ...existing fields
-    difficulty,
-    diffMult: mult,
-  };
-  // spawnParty(game.heroes, mult)
-  // spawnMonsters(game.world, 22, mult)
-  return game;
+export function createGame() { return resetGame("medium"); }
+
+export function resetGame(difficulty = "medium") {
+  const diffMult = DIFFICULTY[difficulty] || DIFFICULTY.medium;
+  const world = createWorld();
+  const heroes = spawnParty(world, diffMult);
+  const monsters = spawnMonsters(world, diffMult);
+  ...
+  return { world, heroes, monsters, ..., difficulty, diffMult };
 }
 ```
 
-### 4. Hero Spawning — `js/hero.js`
+Threading lives in `resetGame`, not `createGame`, because restart calls `resetGame` directly (`game.js:175`) — both paths stay in sync.
+
+### 4. Hero spawning — `js/hero.js:79`
+
+`spawnParty(world, mult = null)` — `world` stays first (spawn position needs it). Multiply `maxHp`/`damage`/`speed`, and `healPulse` only when present on the spec; `hp = maxHp` after scaling. `Math.round` on every stat. Guard with `mult ? ... : value` so `null` = exact current behavior.
+
+### 5. Monster spawning + scaling — `js/monster.js` & boss/portal sites
 
 ```js
-export function spawnParty(difficultyMult = {}) {
-  return PARTY.map((spec, index) => ({
-    // ...existing
-    maxHp: Math.round(spec.maxHp * (difficultyMult.heroHp ?? 1)),
-    damage: Math.round(spec.damage * (difficultyMult.heroDmg ?? 1)),
-    speed: Math.round(spec.speed * (difficultyMult.heroSpeed ?? 1)),
-    healPulse: Math.round((spec.healPulse ?? 0) * (difficultyMult.heroHeal ?? 1)),
-    // hp starts at maxHp
-    hp: Math.round(spec.maxHp * (difficultyMult.heroHp ?? 1)),
-  }));
+export function scaleMonster(m, mult) {
+  // applies monHp/monDmg/monSpeed/monAggro/monCd; hp = maxHp;
+  // m.respawnMult = mult.respawn; returns m; no-op when mult is null
+}
+export function spawnMonsters(world, mult = null, count = 22) { ... scaleMonster(createMonster(spec, x, y), mult) ... }
+```
+
+Call sites updated (all in `game.js`): reset (`:21`), `switchToCavern` (`:145`), `switchToOverworld` (`:163`) — **without these, difficulty would silently reset after portal travel**.
+
+Bosses don't go through `spawnMonsters` — wrap explicitly:
+
+- `spawnBoss` (`game.js:83`): `scaleMonster(createMonster(lynelSpec(), ...), game.diffMult)`
+- Aquamentus spawn (`game.js:364`): same with `game.diffMult`
+
+Respawn delay (`monster.js:165`), where `respawnMult` finally gets used:
+
+```js
+monster.respawnAt = now + (7000 + world.rand() * 4000) * (monster.respawnMult || 1);
+```
+
+Respawn (`:169`) re-creates from the monster itself, so scaled stats carry over automatically.
+
+### 6. Restart — simple option (`game.js:173-177`)
+
+```js
+if (input.wantsRestart()) {
+  sound.playRestart();
+  Object.assign(game, resetGame(game.difficulty));   // was: resetGame()
+  setComplete(false);
 }
 ```
 
-### 5. Monster Spawning — `js/monster.js`
+Welcome screen shows **only on first launch**; R keeps the chosen difficulty. No `started`/`main.js` coordination needed.
 
-```js
-export function spawnMonsters(world, count, difficultyMult = {}) {
-  // ...existing loop
-  const kind = randomKind(world);
-  const m = createMonster(kind, x, y);
-  // apply multipliers
-  m.maxHp = Math.round(m.maxHp * (difficultyMult.monHp ?? 1));
-  m.hp = m.maxHp;
-  m.damage = Math.round(m.damage * (difficultyMult.monDmg ?? 1));
-  m.speed = Math.round(m.speed * (difficultyMult.monSpeed ?? 1));
-  m.aggro = Math.round(m.aggro * (difficultyMult.monAggro ?? 1));
-  m.attackCooldown = Math.round(m.attackCooldown * (difficultyMult.monCd ?? 1));
-  m.respawnMult = difficultyMult.respawn ?? 1;
-  // ...
-}
-```
+### 7. Docs + version
 
-Shrine wave/boss functions also read `game.diffMult.shrineWaves` and apply same multipliers.
-
-### 6. Restart Flow
-
-On **R** (game over or complete): re-show `#welcome` with last choice pre-selected (read from `game.difficulty` or `localStorage`).
-
-```js
-// in main.js, restart handler
-welcomeEl.style.display = "flex";
-diffButtons.forEach((b) => b.classList.toggle("selected", b.dataset.diff === lastDifficulty));
-```
-
-Optional: `localStorage.setItem("difficulty", selectedDifficulty)` on pick; read on load.
-
-### 7. Docs + Version
-
-- `docs/gameplay.md`: Add `## Difficulty Modes` section with the multiplier table.
-- `js/main.js:6`: `const VERSION = "0.15";`
-- `docs/README.md:34`: `Current: 0.15`
+- `docs/gameplay.md`: add **Difficulty Modes** section (multiplier table + note that R preserves the choice).
+- `js/main.js:6`: `VERSION = "0.15"` · `docs/README.md:34`: `Current: 0.15`
+- `README.md:59`: `v0.6 … v0.14` → `v0.15`; update "235 assertions" (`README.md:54,83`) to the new count.
+- `docs/backlog.md`: move **BL-1** to Done (closed by this bump).
 
 ### 8. Tests — `tests/test.py`
 
-- Line 61: add `"diff-easy", "diff-medium", "diff-hard", "difficulty-select"` to tag list
-- Line 345: add `"#difficulty-select"` to CSS selector list
-- Run `python3 tests/test.py` → expect 235+ passing
-
----
-
-## Open Questions (Decide Before Code)
-
-1. **Restart behavior**: Re-show welcome with last choice pre-selected, or always default to Medium? → *Recommend: remember last choice, show it pre-selected*
-2. **Persist across sessions?**: `localStorage` remember last difficulty? → *Recommend: yes, one line*
-3. **Boss scaling**: Lynel/Aquamentus use same multipliers? → *Recommend: yes*
-4. **Version bump**: Minor (`0.15`) or patch (`0.14.1`)? → *Recommend: minor `0.15` (user-facing feature)*
-
----
+- `:61` id list → add `"difficulty-select", "diff-easy", "diff-medium", "diff-hard"`
+- `:189` required game state → add `"difficulty"`
+- `:345` CSS selectors → add `"#difficulty-select"`
+- Re-run: **0 failed**, new total; sync README count.
 
 ## Acceptance Criteria
 
-- [ ] Welcome screen shows three styled buttons; Medium pre-selected
-- [ ] Clicking a button highlights it; "any key" starts with that mode
-- [ ] In-game stats reflect multipliers (Easy hero HP ≈ 100/88/81/119; Hard ≈ 64/56/52/76)
-- [ ] Medium behaves identically to current v0.14
-- [ ] `python3 tests/test.py` passes (≥235)
-- [ ] No console errors on load/play/restart
+- [ ] Welcome shows three buttons, Medium pre-selected; clicking one selects without starting the game
+- [ ] Any other click/keypress starts with the selected mode (keyboard: Tab → Enter selects, next key starts)
+- [ ] Easy hero HP = 100/88/81/119; Hard = 64/56/52/76 (`window.__hp.game.heroes`)
+- [ ] Medium stat-for-stat equals v0.14 (all multipliers ×1, `Math.round` identity)
+- [ ] Bosses, cavern monsters, and portal round-trips all carry the chosen difficulty
+- [ ] **R** restarts into the same difficulty, no welcome screen
+- [ ] `python3 tests/test.py` → 0 failed · no console errors
 
----
+## Verification (manual, `python3 serve.py`)
 
-## Effort Estimate
+1. Click "Hard" → welcome stays → click elsewhere → starts Hard
+2. Tab to button + Enter → selects only; press W → starts
+3. Press W with no selection → starts Medium (default)
+4. Wipe → R → same difficulty, no welcome
+5. Portal to cavern and back → difficulty persists
+6. Compare Medium hero/monster stats against v0.14 values
+
+## Effort
 
 | Phase | Time |
-|-------|------|
-| UI + selection | 45 min |
-| Multiplier plumbing (game/hero/monster) | 60 min |
-| Shrine wave + restart flow | 20 min |
-| Docs + tests | 20 min |
-| **Total** | **~2.5 hrs** |
+|---|---|
+| UI + guarded selection logic | 60 min |
+| Multiplier plumbing (game/hero/monster, 6 call sites) | 75 min |
+| Restart + docs + version | 25 min |
+| Tests + browser verification | 30 min |
+| **Total** | **~3 hrs** |
 
----
+## Out of Scope
 
-## Alternative Approaches Considered
-
-- **Simpler**: Only scale monster HP/damage (2 multipliers) — less distinct feel
-- **Per-monster scaling**: Different multipliers per type — more complex
-- **Preset configs**: Three full spec tables in `difficulty.js` — cleanest separation, more files
-
-**Recommendation**: Multiplier table above — single source of truth, easy to tune, minimal file churn.
+- `localStorage` persistence of last difficulty (future idea)
+- Stale `docs/gameplay.md` "Phase 1: Defense" section (dead `spawnWaveMonsters` — pre-existing drift)
+- Mid-game difficulty change
