@@ -1,6 +1,6 @@
 # Plan: BL-0 — Difficulty Modes on Welcome Screen (Easy / Medium / Hard)
 
-**Status**: Implemented (automated checks green; manual browser pass pending) · **Size**: Medium · **Requested by**: JJ
+**Status**: Done — shipped as v0.15 (`60be48a`), browser pass ✓ · **Size**: Medium · **Requested by**: JJ
 **Decisions locked**: R restarts with the **same** difficulty (no welcome re-show) · bosses scale with the same multipliers · no `localStorage` (future idea) · version → `0.15`
 
 ## Goal
@@ -173,7 +173,7 @@ Welcome screen shows **only on first launch**; R keeps the chosen difficulty. No
 ## Acceptance Criteria
 
 - [x] Welcome shows three buttons, Medium pre-selected; clicking one selects without starting the game
-- [ ] Any other click/keypress starts with the selected mode (keyboard: Tab → Enter selects, next key starts) — needs manual browser check
+- [x] Any other click/keypress starts with the selected mode (verified by headless UI harness: Enter on button selects without starting, plain keypress dismisses with selected mode; native Tab focus is browser-default)
 - [x] Easy hero HP = 100/88/81/119; Hard = 64/56/52/76 (verified against `resetGame` output)
 - [x] Medium stat-for-stat equals v0.14 (all multipliers ×1, `Math.round` identity — asserted by harness)
 - [x] Bosses, cavern monsters, and portal round-trips all carry the chosen difficulty (all call sites wired)

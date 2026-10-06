@@ -8,6 +8,15 @@ Status: `in progress` — actively being worked on · `ready` — unblocked, can
 
 ## Done
 
+### BL-0: Difficulty modes on the starting screen (Easy / Medium / Hard)
+
+- **Status**: done — shipped as v0.15 in `60be48a`
+- **Size**: medium
+- **Requested by**: JJ
+- **Plan**: [`docs/plans/BL-0-difficulty-modes.md`](plans/BL-0-difficulty-modes.md) (reviewed; blockers fixed — event-guard on the button group, `resetGame(difficulty)` threading, `scaleMonster` for bosses, R keeps difficulty)
+- **Acceptance**: welcome screen offers three difficulty buttons; the chosen mode measurably changes enemy/hero numbers in game; Medium matches today's balance; docs updated; `python3 tests/test.py` passes with 0 failures.
+- **Verified**: 243/243 tests · headless UI harness (select-vs-start, difficulty persistence through R) · visual browser pass by JJ
+
 ### BL-1: Fix version drift in docs
 
 - **Status**: done
@@ -18,16 +27,6 @@ Status: `in progress` — actively being worked on · `ready` — unblocked, can
 ---
 
 ## In Progress
-
-### BL-0: Difficulty modes on the starting screen (Easy / Medium / Hard)
-
-- **Status**: in progress — code complete, 243/243 tests pass; awaiting manual browser pass
-- **Size**: medium
-- **Requested by**: JJ
-- **Plan**: [`docs/plans/BL-0-difficulty-modes.md`](plans/BL-0-difficulty-modes.md) (reviewed; blockers fixed — event-guard on the button group, `resetGame(difficulty)` threading, `scaleMonster` for bosses, R keeps difficulty)
-- **Acceptance**: welcome screen offers three difficulty buttons; the chosen mode measurably changes enemy/hero numbers in game; Medium matches today's balance; docs updated; `python3 tests/test.py` passes with 0 failures.
-
----
 
 ## Ready
 
