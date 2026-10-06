@@ -1,6 +1,6 @@
 import { createWorld, shrineCenter, randomWalkableNear, zorasDomainCenter, createCavernWorld, TILE } from "./world.js?v=5";
 import { spawnParty, updateParty } from "./hero.js?v=5";
-import { spawnMonsters, updateMonsters, createMonster, randomKind, lynelSpec, aquamentusSpec } from "./monster.js?v=5";
+import { spawnMonsters, updateMonsters, createMonster, scaleMonster, randomKind, lynelSpec, aquamentusSpec } from "./monster.js?v=5";
 import { spawnChests, updateChests } from "./chest.js?v=5";
 import { spawnNpcs, getNearbyNpc } from "./npc.js?v=5";
 import { updateHud, setBanner, setWipe, setComplete, drawShrineRelics } from "./render.js?v=5";
@@ -11,14 +11,30 @@ const RUNE_COUNT = 5;
 const RUNE_SYMBOLS = ["💧", "🔥", "⚡", "🌙", "⭐"];
 const RUNE_COLORS = ["#00bcd4", "#ff5722", "#ffeb3b", "#9c27b0", "#4caf50"];
 
+const DIFFICULTY = {
+  easy: {
+    heroHp: 1.25, heroDmg: 1.2, heroSpeed: 1.1, heroHeal: 1.3,
+    monHp: 0.75, monDmg: 0.7, monSpeed: 0.85, monAggro: 0.8, monCd: 1.2, respawn: 1.5,
+  },
+  medium: {
+    heroHp: 1, heroDmg: 1, heroSpeed: 1, heroHeal: 1,
+    monHp: 1, monDmg: 1, monSpeed: 1, monAggro: 1, monCd: 1, respawn: 1,
+  },
+  hard: {
+    heroHp: 0.8, heroDmg: 0.85, heroSpeed: 0.9, heroHeal: 0.7,
+    monHp: 1.3, monDmg: 1.25, monSpeed: 1.15, monAggro: 1.2, monCd: 0.8, respawn: 0.7,
+  },
+};
+
 export function createGame() {
-  return resetGame();
+  return resetGame("medium");
 }
 
-export function resetGame() {
+export function resetGame(difficulty = "medium") {
+  const diffMult = DIFFICULTY[difficulty] || DIFFICULTY.medium;
   const world = createWorld();
-  const heroes = spawnParty(world);
-  const monsters = spawnMonsters(world);
+  const heroes = spawnParty(world, diffMult);
+  const monsters = spawnMonsters(world, diffMult);
   const chests = spawnChests(world);
   const npcs = spawnNpcs(world);
   updateHud(heroes, chests, false);
@@ -30,6 +46,8 @@ export function resetGame() {
     monsters,
     chests,
     npcs,
+    difficulty,
+    diffMult,
     wiped: false,
     nearShrine: false,
     bannerText: "",
@@ -80,7 +98,7 @@ function spawnWaveMonsters(game) {
 function spawnBoss(game) {
   const center = shrineCenter(game.world);
   const pos = randomWalkableNear(game.world, center, 40);
-  const boss = createMonster(lynelSpec(), pos.x, pos.y);
+  const boss = scaleMonster(createMonster(lynelSpec(), pos.x, pos.y), game.diffMult);
   boss.noRespawn = true;
   game.shrineBoss = boss;
   game.monsters.push(boss);
@@ -142,7 +160,7 @@ function initPuzzle(game) {
 function switchToCavern(game) {
   if (!game.cavernWorld) {
     game.cavernWorld = createCavernWorld();
-    game.cavernMonsters = spawnMonsters(game.cavernWorld, 18);
+    game.cavernMonsters = spawnMonsters(game.cavernWorld, game.diffMult, 18);
   }
   game.currentMap = "cavern";
   game.world = game.cavernWorld;
@@ -160,7 +178,7 @@ function switchToCavern(game) {
 function switchToOverworld(game) {
   game.currentMap = "overworld";
   game.world = createWorld();
-  game.monsters = spawnMonsters(game.world);
+  game.monsters = spawnMonsters(game.world, game.diffMult);
   const dest = zorasDomainCenter(game.world);
   for (const hero of game.heroes) {
     hero.x = dest.x;
@@ -172,7 +190,7 @@ export function updateGame(game, input, now, dt) {
   if (game.wiped || game.gameComplete) {
     if (input.wantsRestart()) {
       sound.playRestart();
-      const next = resetGame();
+      const next = resetGame(game.difficulty);
       Object.assign(game, next);
       setComplete(false);
     }
@@ -361,7 +379,7 @@ export function updateGame(game, input, now, dt) {
     const distToBossRoom = Math.hypot(leader.x - bossRoom.x, leader.y - bossRoom.y);
     if (distToBossRoom < 120) {
       game.cavernBossState = "boss";
-      game.cavernBoss = createMonster(aquamentusSpec(), bossRoom.x, bossRoom.y);
+      game.cavernBoss = scaleMonster(createMonster(aquamentusSpec(), bossRoom.x, bossRoom.y), game.diffMult);
       game.cavernBoss.noRespawn = true;
       game.monsters.push(game.cavernBoss);
       sound.playBossSpawn();

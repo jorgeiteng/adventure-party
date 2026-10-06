@@ -1,9 +1,9 @@
 import { createInput } from "./input.js?v=5";
 import { createCamera, updateCamera } from "./camera.js?v=5";
-import { createGame, updateGame } from "./game.js?v=5";
+import { createGame, updateGame, resetGame } from "./game.js?v=5";
 import { drawWorld, drawEntities, drawPuzzleRunes, drawShrineRelics, setComplete } from "./render.js?v=5";
 
-const VERSION = "0.14";
+const VERSION = "0.15";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -17,10 +17,35 @@ document.getElementById("version").textContent = `v${VERSION}`;
 let started = false;
 const welcomeEl = document.getElementById("welcome");
 
+let selectedDifficulty = "medium";
+const diffGroup = document.getElementById("difficulty-select");
+
+function selectDifficulty(diff) {
+  selectedDifficulty = diff;
+  diffGroup.querySelectorAll("button").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.diff === diff);
+  });
+}
+
+if (diffGroup) {
+  diffGroup.addEventListener("mousedown", (e) => e.stopPropagation());
+  diffGroup.addEventListener("click", (e) => e.stopPropagation());
+  diffGroup.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+  });
+  diffGroup.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectDifficulty(btn.dataset.diff);
+      btn.blur();
+    });
+  });
+}
+
 function dismissWelcome() {
   if (started) return;
   started = true;
   welcomeEl.style.display = "none";
+  Object.assign(game, resetGame(selectedDifficulty));
 }
 
 welcomeEl.addEventListener("click", dismissWelcome);

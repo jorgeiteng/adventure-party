@@ -16,7 +16,7 @@ A Zelda-inspired overworld in the browser: you lead one hero while three compani
 | Data-driven design ("specs", not hardcoded behavior) | Recipes in `docs/contributing.md`, specs in `js/monster.js` |
 | Modular code without a bundler | ES modules + `?v=5` cache-busting |
 | Procedural generation and audio synthesis | `js/render.js`, `js/audio.js` |
-| Testing without a framework | `tests/test.py` — 235 assertions |
+| Testing without a framework | `tests/test.py` — 243 assertions |
 | Writing documentation before code | `docs/` (architecture, technical, gameplay, contributing) |
 
 ## Play
@@ -56,7 +56,7 @@ Treasure chests scattered across the overworld grant permanent party upgrades.
 
 ### How the project is run
 
-- **Small, versioned steps** — features landed as `v0.6`, `v0.7` … `v0.14`, each one reviewable on its own.
+- **Small, versioned steps** — features landed as `v0.6`, `v0.7` … `v0.15`, each one reviewable on its own.
 - **One onboarding document** — [`AGENTS.md`](AGENTS.md) tells any contributor (human or AI coding assistant) the commands, gotchas, and conventions in under a minute.
 - **Tests as guardrails** — `tests/test.py` catches broken imports, unbalanced braces, game-state invariants, and CSS selectors, so a mistake is found in seconds, not at play time.
 - **Docs that match the code** — module graph, game loop, and state machines are written down in `docs/architecture.md`.
@@ -80,7 +80,7 @@ serve.py          static dev server
 python3 tests/test.py
 ```
 
-235 assertions, no dependencies. Run it after any change.
+243 assertions, no dependencies. Run it after any change.
 
 ## Documentation
 

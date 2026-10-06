@@ -76,24 +76,34 @@ function rotateOffset(offset, facing) {
   };
 }
 
-export function spawnParty(world) {
+export function spawnParty(world, mult = null) {
   const originX = world.spawn.tx * TILE + TILE / 2;
   const originY = world.spawn.ty * TILE + TILE / 2;
-  return PARTY.map((spec, index) => ({
-    ...spec,
-    kind: "hero",
-    x: originX + (index - 1.5) * 18,
-    y: originY + index * 6,
-    r: 9,
-    hp: spec.maxHp,
-    facing: { x: 0, y: -1 },
-    nextAttack: 0,
-    swingUntil: 0,
-    invulnUntil: 0,
-    flashUntil: 0,
-    nextHeal: 0,
-    knock: null,
-  }));
+  return PARTY.map((spec, index) => {
+    const maxHp = mult ? Math.round(spec.maxHp * mult.heroHp) : spec.maxHp;
+    const damage = mult ? Math.round(spec.damage * mult.heroDmg) : spec.damage;
+    const speed = mult ? Math.round(spec.speed * mult.heroSpeed) : spec.speed;
+    const healPulse = spec.healPulse && mult ? Math.round(spec.healPulse * mult.heroHeal) : spec.healPulse;
+    return {
+      ...spec,
+      kind: "hero",
+      x: originX + (index - 1.5) * 18,
+      y: originY + index * 6,
+      r: 9,
+      maxHp,
+      damage,
+      speed,
+      healPulse,
+      hp: maxHp,
+      facing: { x: 0, y: -1 },
+      nextAttack: 0,
+      swingUntil: 0,
+      invulnUntil: 0,
+      flashUntil: 0,
+      nextHeal: 0,
+      knock: null,
+    };
+  });
 }
 
 export function updateParty(heroes, monsters, world, input, now, dt) {

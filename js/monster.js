@@ -142,7 +142,19 @@ export function createMonster(spec, x, y) {
   };
 }
 
-export function spawnMonsters(world, count = 22) {
+export function scaleMonster(m, mult) {
+  if (!mult) return m;
+  m.maxHp = Math.round(m.maxHp * mult.monHp);
+  m.hp = m.maxHp;
+  m.damage = Math.round(m.damage * mult.monDmg);
+  m.speed = Math.round(m.speed * mult.monSpeed);
+  m.aggro = Math.round(m.aggro * mult.monAggro);
+  m.attackCooldown = Math.round(m.attackCooldown * mult.monCd);
+  m.respawnMult = mult.respawn;
+  return m;
+}
+
+export function spawnMonsters(world, mult = null, count = 22) {
   const list = [];
   const spawnPx = {
     x: world.spawn.tx * TILE + TILE / 2,
@@ -152,7 +164,7 @@ export function spawnMonsters(world, count = 22) {
   for (let i = 0; i < count; i++) {
     const spec = kinds[Math.floor(world.rand() * kinds.length)];
     const pos = randomWalkable(world, spawnPx, 140);
-    list.push(createMonster(spec, pos.x, pos.y));
+    list.push(scaleMonster(createMonster(spec, pos.x, pos.y), mult));
   }
   return list;
 }
@@ -162,7 +174,7 @@ export function updateMonsters(monsters, heroes, world, now, dt) {
   for (const monster of monsters) {
     if (monster.hp <= 0) {
       if (monster.noRespawn) continue;
-      if (!monster.respawnAt) monster.respawnAt = now + 7000 + world.rand() * 4000;
+      if (!monster.respawnAt) monster.respawnAt = now + (7000 + world.rand() * 4000) * (monster.respawnMult || 1);
       if (now >= monster.respawnAt) {
         const leader = heroes[0];
         const pos = randomWalkable(world, leader, 180);

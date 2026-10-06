@@ -2,39 +2,34 @@
 
 Work items not yet started, ordered by id; close them by moving to "Done".
 
-Status: `ready` — unblocked, can start now · `decide` — needs a decision first · `done` — completed
+Status: `in progress` — actively being worked on · `ready` — unblocked, can start now · `decide` — needs a decision first · `done` — completed
 
 ---
 
 ## Done
 
-_None._
+### BL-1: Fix version drift in docs
+
+- **Status**: done
+- **Size**: trivial
+- **Detail**: `docs/README.md` said `Current: 0.9` while the code shipped a newer `VERSION`. Closed by the BL-0 version bump — `js/main.js:6`, `docs/README.md:34`, and `README.md:59` now all say `0.15`.
+- **Rule going forward**: any version bump updates `js/main.js` and the docs together.
+
+---
+
+## In Progress
+
+### BL-0: Difficulty modes on the starting screen (Easy / Medium / Hard)
+
+- **Status**: in progress — code complete, 243/243 tests pass; awaiting manual browser pass
+- **Size**: medium
+- **Requested by**: JJ
+- **Plan**: [`docs/plans/BL-0-difficulty-modes.md`](plans/BL-0-difficulty-modes.md) (reviewed; blockers fixed — event-guard on the button group, `resetGame(difficulty)` threading, `scaleMonster` for bosses, R keeps difficulty)
+- **Acceptance**: welcome screen offers three difficulty buttons; the chosen mode measurably changes enemy/hero numbers in game; Medium matches today's balance; docs updated; `python3 tests/test.py` passes with 0 failures.
 
 ---
 
 ## Ready
-
-### BL-0: Difficulty modes on the starting screen (Easy / Medium / Hard)
-
-- **Status**: ready
-- **Size**: medium
-- **Requested by**: JJ
-- **Detail**: The welcome screen (`index.html:29-33`, dismissed in `js/main.js:18-26`) starts the game at a single fixed difficulty. Add an **Easy / Medium / Hard** choice shown on that starting screen so the game is easier or harder for the player.
-- **Sketch**:
-  1. Add three selectable buttons to `#welcome` in `index.html` (plus a hidden default of Medium), styled in `css/style.css:239-266`.
-  2. Store the choice on game state (`difficulty: "easy" | "medium" | "hard"`) in `createGame()` (`js/game.js`); dismiss the welcome screen only after a pick (or let "any key" start on the current selection).
-  3. Define a data-driven difficulty table — monster HP/DMG/aggro, hero damage taken, respawn timings — keyed by mode, applied where specs are built (`js/monster.js`, `js/hero.js`, `js/game.js`).
-  4. Reset the selection on **R** restart back to the welcome screen choice (or keep it — decide during implementation).
-  5. Document the modes in `docs/gameplay.md` and bump `VERSION` (`js/main.js:6`) + `docs/README.md` together.
-  6. Add assertions to `tests/test.py` (new selectors/ids; suite must stay green).
-- **Acceptance**: welcome screen offers three difficulty buttons; the chosen mode measurably changes enemy/hero numbers in game; Medium matches today's balance; docs updated; `python3 tests/test.py` passes.
-
-### BL-1: Fix version drift in docs
-
-- **Status**: ready
-- **Size**: trivial
-- **Detail**: `docs/README.md:34` says `Current: 0.9`; the shipped value is `VERSION = "0.14"` in `js/main.js:6` (and `README.md:59` documents v0.6…v0.14).
-- **Acceptance**: `docs/README.md` reports `0.14`; any future version bump updates `js/main.js` and `docs/README.md` together.
 
 ---
 
@@ -59,9 +54,9 @@ _None._
   3. Extend `docs/contributing.md` with a **Spec-Driven Workflow** section: write spec → get agreement → implement → add assertions → tick acceptance criteria → close.
   4. Add one line to `AGENTS.md` pointing contributors at `docs/specs/` so agents write the spec before the code.
   5. Link the directory from the `docs/README.md` table of contents.
-  6. Run `python3 tests/test.py` (docs-only change; must stay 235/235).
+  6. Run `python3 tests/test.py` (docs-only change; must stay green).
 - **Open question**: backfill specs for existing features (shrine, cavern, chests, combat), or write specs for new work only? Backfill costs ~6 specs; new-work-only is cheaper but leaves the current codebase unspecced.
-- **Acceptance**: `docs/specs/TEMPLATE.md` and `docs/specs/README.md` exist; `docs/contributing.md` and `AGENTS.md` describe the workflow; `docs/README.md` links it; `python3 tests/test.py` passes 235/235.
+- **Acceptance**: `docs/specs/TEMPLATE.md` and `docs/specs/README.md` exist; `docs/contributing.md` and `AGENTS.md` describe the workflow; `docs/README.md` links it; `python3 tests/test.py` passes with 0 failures.
 
 ---
 

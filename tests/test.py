@@ -58,7 +58,8 @@ ok("style.css exists")
 print("\n=== HTML Structure ===")
 
 html = read("index.html")
-for tag in ["game-root", "game", "hud", "party-hud", "banner", "wipe", "welcome", "version", "sound-btn"]:
+for tag in ["game-root", "game", "hud", "party-hud", "banner", "wipe", "welcome", "version", "sound-btn",
+            "difficulty-select", "diff-easy", "diff-medium", "diff-hard"]:
     if f'id="{tag}"' in html:
         ok(f"#{tag} element found")
     else:
@@ -189,7 +190,7 @@ required_state = [
     "world", "heroes", "monsters", "chests", "npcs", "wiped",
     "shrineState", "hasMedal", "currentMap", "cavernBoss",
     "cavernBossState", "shrineRelics", "gameComplete", "puzzle",
-    "nearPortal", "portalCooldown", "currentNpc",
+    "nearPortal", "portalCooldown", "currentNpc", "difficulty",
 ]
 for key in required_state:
     # Match both "key: value" and shorthand "key," (JS shorthand property syntax)
@@ -343,7 +344,8 @@ print("\n=== CSS ===")
 
 css = read("css/style.css")
 for sel in ["#game", "#hud", "#banner", "#wipe", "#welcome", "#version",
-            "#sound-btn", "#complete", ".hp-bar", ".hp-fill", ".medal-hud"]:
+            "#sound-btn", "#complete", ".hp-bar", ".hp-fill", ".medal-hud",
+            "#difficulty-select"]:
     if sel in css:
         ok(f"CSS has {sel}")
     else:

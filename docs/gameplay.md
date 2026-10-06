@@ -6,10 +6,29 @@
 |---|---|
 | **WASD** / **Arrow Keys** | Move the party leader |
 | **Space** / **Left Click** | Melee attack |
-| **R** | Restart (after game over) |
+| **R** | Restart (keeps the chosen difficulty) |
 | **M** / **Sound Button** | Toggle mute |
 
 Movement is normalized diagonally (holding W+D moves at the same speed as W alone).
+
+## Difficulty Modes
+
+The welcome screen offers **Easy**, **Medium**, and **Hard**. The choice is made once at the start and preserved across restarts (**R**) and portal travel.
+
+| Stat | Easy | Medium | Hard |
+|---|---|---|---|
+| Hero max HP | ×1.25 | ×1.0 | ×0.8 |
+| Hero damage | ×1.2 | ×1.0 | ×0.85 |
+| Hero speed | ×1.1 | ×1.0 | ×0.9 |
+| Billie Jean heal pulse | ×1.3 | ×1.0 | ×0.7 |
+| Monster HP | ×0.75 | ×1.0 | ×1.3 |
+| Monster damage | ×0.7 | ×1.0 | ×1.25 |
+| Monster speed | ×0.85 | ×1.0 | ×1.15 |
+| Monster aggro range | ×0.8 | ×1.0 | ×1.2 |
+| Monster attack cooldown | ×1.2 (slower) | ×1.0 | ×0.8 (faster) |
+| Monster respawn delay | ×1.5 (longer) | ×1.0 | ×0.7 (shorter) |
+
+Medium is exactly the base balance. Bosses (Lynel, Aquamentus) scale with the same monster multipliers.
 
 ## Party Members
 
@@ -156,11 +175,11 @@ After defeating the Aquamentus in the cavern:
 1. A shrine relic appears where the boss fell
 2. Walk into the relic to collect it — the party is fully healed
 3. The "Adventure Complete!" screen appears
-4. Press **R** to play again (full reset)
+4. Press **R** to play again (full reset, difficulty kept)
 
 ## Game Over
 
 If the leader (Cody) dies:
 1. The screen shows "Game Over"
 2. Press **R** to restart
-3. The entire game resets (world, monsters, chests, stats)
+3. The entire game resets (world, monsters, chests, stats); the chosen difficulty is kept

@@ -29,7 +29,12 @@
       <div id="welcome">
         <h1>Adventure Party</h1>
         <p>Gather your party. Explore the world. Face the shrine.</p>
-        <p class="welcome-hint">Click or press any key to start</p>
+        <div id="difficulty-select" role="group" aria-label="Difficulty">
+          <button type="button" id="diff-easy" data-diff="easy" title="Easier enemies, stronger heroes">Easy</button>
+          <button type="button" id="diff-medium" data-diff="medium" class="selected" title="Standard balance">Medium</button>
+          <button type="button" id="diff-hard" data-diff="hard" title="Tougher enemies, weaker heroes">Hard</button>
+        </div>
+        <p class="welcome-hint">Pick a difficulty, then click or press any key to start</p>
       </div>
     </div>
     <script type="module" src="js/main.js?v=5"></script>

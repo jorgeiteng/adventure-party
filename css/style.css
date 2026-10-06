@@ -270,6 +270,35 @@ kbd {
   animation: pulse 2s ease-in-out infinite;
 }
 
+#difficulty-select {
+  display: inline-flex;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+#difficulty-select button {
+  padding: 8px 18px;
+  font-size: 15px;
+  font-family: inherit;
+  background: rgba(244, 234, 208, 0.12);
+  border: 2px solid rgba(244, 234, 208, 0.3);
+  color: #f4ead0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+#difficulty-select button:hover {
+  background: rgba(244, 234, 208, 0.25);
+  border-color: #f4ead0;
+}
+
+#difficulty-select button.selected {
+  background: #fef08a;
+  color: #080c0a;
+  border-color: #d4af37;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
